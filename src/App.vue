@@ -27,6 +27,12 @@ const drawer = ref(true)
       />
 
       <v-list-item
+        title="Vehículos"
+        to="/vehiculos"
+        prepend-icon="mdi-truck"
+      />
+
+      <v-list-item
         title="Usuarios"
         to="/usuarios"
         prepend-icon="mdi-account"

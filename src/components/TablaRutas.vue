@@ -1,25 +1,34 @@
 <script setup lang="ts">
 
-import { ref, onMounted } from "vue"
+import { ref, onMounted, watch } from "vue"
 import { obtenerRutas, crearRuta, actualizarRuta, eliminarRuta } from "@/services/rutasService"
+
+/* -------------------------
+   TYPES
+------------------------- */
+
+type FormRuta = {
+  id: number | null
+  placa: string
+  conductor: string
+  empresa: string
+  destino: string
+  inicio_ruta: string
+  fin_ruta: string
+  km_inicial: number
+  km_final: number
+}
+
+/* -------------------------
+   DATA
+------------------------- */
 
 const rutas = ref<any[]>([])
 const total = ref(0)
+const vehiculos = ref<any[]>([])
 
 const dialog = ref(false)
 const editando = ref(false)
-
-/* CONFIRMACIONES */
-
-const dialogConfirm = ref(false)
-const confirmText = ref("")
-const accionConfirm = ref<null | (() => Promise<void>)>(null)
-
-/* SNACKBAR */
-
-const snackbar = ref(false)
-const snackbarText = ref("")
-const snackbarColor = ref("success")
 
 const options = ref({
   page: 1,
@@ -40,7 +49,7 @@ const headers = [
   { title: "Acciones", key: "acciones", sortable: false }
 ]
 
-const form = ref({
+const form = ref<FormRuta>({
   id: null,
   placa: "",
   conductor: "",
@@ -51,6 +60,10 @@ const form = ref({
   km_inicial: 0,
   km_final: 0
 })
+
+/* -------------------------
+   CARGA DATOS
+------------------------- */
 
 async function cargarRutas() {
 
@@ -63,7 +76,32 @@ async function cargarRutas() {
   total.value = res.meta.total
 }
 
-function nuevaRuta() {
+async function cargarVehiculos(){
+
+  const res = await fetch("http://localhost:3333/api/v1/vehiculos")
+  vehiculos.value = await res.json()
+}
+
+/* -------------------------
+   AUTO COMPLETAR VEHICULO
+------------------------- */
+
+watch(() => form.value.placa, (placa) => {
+
+  const vehiculo = vehiculos.value.find(v => v.placa === placa)
+
+  if (vehiculo) {
+    form.value.conductor = vehiculo.conductor
+    form.value.empresa = vehiculo.empresa || ""
+  }
+
+})
+
+/* -------------------------
+   CRUD
+------------------------- */
+
+function nuevaRuta(){
 
   editando.value = false
 
@@ -101,107 +139,56 @@ function editarRuta(ruta:any){
   dialog.value = true
 }
 
-function confirmarGuardar(){
-
-  confirmText.value = editando.value
-    ? "¿Confirmar actualización de la ruta?"
-    : "¿Confirmar creación de la ruta?"
-
-  accionConfirm.value = guardarRuta
-
-  dialogConfirm.value = true
-}
-
 async function guardarRuta(){
 
-  dialogConfirm.value = false
-
   const data = {
-
     placa: form.value.placa,
     conductor: form.value.conductor,
     empresa: form.value.empresa,
     destino: form.value.destino,
-
     inicio_ruta: form.value.inicio_ruta,
     fin_ruta: form.value.fin_ruta,
-
     km_inicial: Number(form.value.km_inicial),
     km_final: Number(form.value.km_final),
-
     peso: 1,
     volumen: 1,
     numero_facturas: 0,
     numero_clientes: 0
   }
 
-  try{
+  if(editando.value && form.value.id !== null){
 
-    if(editando.value){
+    await actualizarRuta(form.value.id, data)
 
-      await actualizarRuta(form.value.id,data)
+  }else{
 
-      snackbarText.value = "Ruta actualizada correctamente"
-      snackbarColor.value = "info"
-
-    }else{
-
-      await crearRuta(data)
-
-      snackbarText.value = "Ruta creada correctamente"
-      snackbarColor.value = "success"
-
-    }
-
-    snackbar.value = true
-
-    dialog.value = false
-
-    await cargarRutas()
-
-  }catch{
-
-    snackbarText.value = "Error guardando ruta"
-    snackbarColor.value = "error"
-    snackbar.value = true
+    await crearRuta(data)
 
   }
 
+  dialog.value = false
+
+  await cargarRutas()
 }
 
-function confirmarEliminar(ruta:any){
+async function borrarRuta(ruta:any){
 
-  confirmText.value = "¿Seguro que deseas eliminar esta ruta?"
+  await eliminarRuta(ruta.id)
 
-  accionConfirm.value = async () => {
-
-    await eliminarRuta(ruta.id)
-
-    snackbarText.value = "Ruta eliminada correctamente"
-    snackbarColor.value = "error"
-    snackbar.value = true
-
-    await cargarRutas()
-
-  }
-
-  dialogConfirm.value = true
+  await cargarRutas()
 }
 
-async function ejecutarAccion(){
+/* -------------------------
+   INIT
+------------------------- */
 
-  if(accionConfirm.value){
-
-    await accionConfirm.value()
-
-  }
-
-  dialogConfirm.value = false
-}
-
-onMounted(cargarRutas)
+onMounted(() => {
+  cargarRutas()
+  cargarVehiculos()
+})
 
 </script>
+
 
 
 <template>
@@ -224,7 +211,6 @@ Nueva Ruta
 :items="rutas"
 :items-length="total"
 v-model:options="options"
-:items-per-page-options="[10,20,50,100]"
 @update:options="cargarRutas"
 >
 
@@ -234,7 +220,7 @@ v-model:options="options"
 ✏
 </v-btn>
 
-<v-btn icon color="red" @click="confirmarEliminar(item)">
+<v-btn icon color="red" @click="borrarRuta(item)">
 🗑
 </v-btn>
 
@@ -258,7 +244,13 @@ v-model:options="options"
 <v-row>
 
 <v-col cols="12" md="3">
-<v-text-field v-model="form.placa" label="Placa"/>
+<v-select
+  v-model="form.placa"
+  :items="vehiculos"
+  item-title="placa"
+  item-value="placa"
+  label="Placa"
+/>
 </v-col>
 
 <v-col cols="12" md="3">
@@ -297,11 +289,9 @@ v-model:options="options"
 
 <v-spacer/>
 
-<v-btn @click="dialog=false">
-Cancelar
-</v-btn>
+<v-btn @click="dialog=false">Cancelar</v-btn>
 
-<v-btn color="success" @click="confirmarGuardar">
+<v-btn color="success" @click="guardarRuta">
 Guardar
 </v-btn>
 
@@ -310,56 +300,5 @@ Guardar
 </v-card>
 
 </v-dialog>
-
-
-<v-dialog v-model="dialogConfirm" width="420">
-
-<v-card>
-
-<v-card-title class="text-h6">
-Confirmación
-</v-card-title>
-
-<v-card-text>
-{{ confirmText }}
-</v-card-text>
-
-<v-card-actions>
-
-<v-spacer/>
-
-<v-btn variant="text" @click="dialogConfirm=false">
-Cancelar
-</v-btn>
-
-<v-btn color="primary" @click="ejecutarAccion">
-Confirmar
-</v-btn>
-
-</v-card-actions>
-
-</v-card>
-
-</v-dialog>
-
-
-<v-snackbar
-v-model="snackbar"
-:color="snackbarColor"
-timeout="3000"
-location="bottom right"
->
-
-{{ snackbarText }}
-
-<template #actions>
-
-<v-btn variant="text" @click="snackbar=false">
-Cerrar
-</v-btn>
-
-</template>
-
-</v-snackbar>
 
 </template>
