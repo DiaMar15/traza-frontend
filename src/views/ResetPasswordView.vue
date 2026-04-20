@@ -6,7 +6,6 @@ const route = useRoute()
 const router = useRouter()
 
 const password = ref('')
-
 const token = route.query.token as string
 
 const handleReset = async () => {
@@ -27,7 +26,9 @@ const handleReset = async () => {
     }
 
     alert('Contraseña actualizada')
-    router.push('/login')
+
+    // 🔥 FIX
+    router.push('/auth/login')
 
   } catch (error: any) {
     alert(error.message)
@@ -39,10 +40,22 @@ const handleReset = async () => {
   <v-card class="pa-6" style="max-width: 400px; margin:auto;">
     <h2 class="mb-4">Nueva contraseña</h2>
 
-    <v-text-field v-model="password" label="Nueva contraseña" type="password" />
+    <v-text-field
+      v-model="password"
+      label="Nueva contraseña"
+      type="password"
+    />
 
     <v-btn @click="handleReset" block color="purple">
       Cambiar contraseña
     </v-btn>
+
+    <!-- 🔐 IR A LOGIN -->
+    <div class="text-center mt-4">
+      <a @click="router.push('/auth/login')" style="cursor:pointer;">
+        ¿Recordaste tu contraseña? Inicia sesión
+      </a>
+    </div>
+
   </v-card>
 </template>

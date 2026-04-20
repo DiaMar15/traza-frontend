@@ -6,40 +6,37 @@ export const authSetStore = defineStore('auth', {
   state: () => ({
     user: (() => {
       try {
-        return JSON.parse(localStorage.getItem('user') || 'null')
+        return JSON.parse(sessionStorage.getItem('user') || 'null')
       } catch {
         return null
       }
     })(),
-    token: localStorage.getItem('token') || null,
+    token: sessionStorage.getItem('token') || null,
   }),
 
   actions: {
 
-    async login(userData: { correo: string, password: string }): Promise<void> {
+    async login(userData: { correo: string, password: string }) {
       try {
         const auth = new AuthService()
 
-        // 🔐 LOGIN
         const login = await auth.login(userData.correo, userData.password)
 
-        // 🔥 TOKEN ADONIS 6
-        const token = login.value
+        const token = login.token
 
         if (!token) {
           throw new Error('Token no recibido')
         }
 
         this.token = token
-        localStorage.setItem('token', token)
+        sessionStorage.setItem('token', token)
 
-        // 👤 PROFILE
         const user = await auth.getProfile(token)
 
         this.user = user
-        localStorage.setItem('user', JSON.stringify(user))
+        sessionStorage.setItem('user', JSON.stringify(user))
 
-        router.push('/')
+        router.push('/app/dashboard')
 
       } catch (error: any) {
         alert(error?.message || 'Error al iniciar sesión')
@@ -53,9 +50,11 @@ export const authSetStore = defineStore('auth', {
     logout() {
       this.token = null
       this.user = null
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      router.push('/login')
+
+      sessionStorage.removeItem('token')
+      sessionStorage.removeItem('user')
+
+      router.push('/auth/login')
     }
   }
 })

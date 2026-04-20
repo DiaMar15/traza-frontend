@@ -1,6 +1,11 @@
 import { createRouter, createWebHistory } from "vue-router"
 import { authSetStore } from "@/stores/AuthStore"
 
+// Layouts
+import WireframeLayout from "@/Layouts/WireframeLayout.vue"
+import AuthLayout from "@/Layouts/AuthLayout.vue"
+
+// Views
 import DashboardView from "@/views/DashboardView.vue"
 import RutasView from "@/views/RutasView.vue"
 import CrearRutaView from "@/views/CrearRutaView.vue"
@@ -11,117 +16,50 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
 
-    /*
-    |--------------------------------------------------------------------------
-    | 🔓 PUBLICAS
-    |--------------------------------------------------------------------------
-    */
+    // 🔁 raíz → login
     {
-      path: "/login",
-      component: LoginView
-    },
-    {
-      path: "/register",
-      component: () => import('@/views/RegisterView.vue')
-    },
-    {
-      path: "/forgot-password",
-      component: () => import('@/views/ForgotPasswordView.vue')
-    },
-    {
-      path: "/reset-password",
-      component: () => import('@/views/ResetPasswordView.vue')
+      path: '/',
+      redirect: '/auth/login'
     },
 
-    /*
-    |--------------------------------------------------------------------------
-    | 🔐 PRIVADAS
-    |--------------------------------------------------------------------------
-    */
+    // 🔓 AUTH (SIN SIDEBAR)
     {
-      path: "/",
-      component: DashboardView,
-      meta: {
-        requiresAuth: true,
-        roles: ['admin', 'Auxiliar Logístico']
-      }
+      path: '/auth',
+      component: AuthLayout,
+      children: [
+        { path: 'login', component: LoginView },
+        { path: 'register', component: () => import('@/views/RegisterView.vue') },
+        { path: 'forgot-password', component: () => import('@/views/ForgotPasswordView.vue') },
+        { path: 'reset-password', component: () => import('@/views/ResetPasswordView.vue') }
+      ]
     },
 
+    // 🔐 APP (CON SIDEBAR)
     {
-      path: "/rutas",
-      component: RutasView,
-      meta: {
-        requiresAuth: true,
-        roles: ['admin', 'Auxiliar Logístico']
-      }
-    },
-
-    {
-      path: "/crearrutas",
-      component: CrearRutaView,
-      meta: {
-        requiresAuth: true,
-        roles: ['admin']
-      }
-    },
-
-    {
-      path: "/usuarios",
-      component: UsuariosView,
-      meta: {
-        requiresAuth: true,
-        roles: ['admin']
-      }
-    },
-
-    {
-      path: "/vehiculos",
-      component: () => import('@/views/VehiculosView.vue'),
-      meta: {
-        requiresAuth: true,
-        roles: ['admin', 'Auxiliar de Bodega']
-      }
+      path: '/app',
+      component: WireframeLayout,
+      meta: { requiresAuth: true },
+      children: [
+        { path: 'dashboard', component: DashboardView },
+        { path: 'rutas', component: RutasView },
+        { path: 'crearrutas', component: CrearRutaView },
+        { path: 'usuarios', component: UsuariosView },
+        { path: 'vehiculos', component: () => import('@/views/VehiculosView.vue') }
+      ]
     }
   ]
 })
 
-/*
-|--------------------------------------------------------------------------
-| 🔐 GUARD GLOBAL (AUTH + ROLES)
-|--------------------------------------------------------------------------
-*/
+// 🔐 GUARD
 router.beforeEach((to, from, next) => {
   const auth = authSetStore()
 
-  const isAuth = auth.isAuthenticated()
-  const user = auth.user
-
-  const requiresAuth = (to.meta as any).requiresAuth
-  const roles = (to.meta as any).roles as string[] | undefined
-
-  // 🔐 requiere login
-  if (requiresAuth && !isAuth) {
-    return next('/login')
+  if (to.matched.some(r => r.meta.requiresAuth) && !auth.isAuthenticated()) {
+    return next('/auth/login')
   }
 
-  // 🚫 evitar volver al login
-  if (to.path === '/login' && isAuth) {
-    return next('/')
-  }
-
-  // 👥 validar roles
-  if (roles && user) {
-
-    const userRoles = user.roles?.map((r: any) => r.nombre) || []
-
-    const hasRole = roles.some((role) =>
-      userRoles.includes(role)
-    )
-
-    if (!hasRole) {
-      alert('No tienes permisos para acceder')
-      return next('/')
-    }
+  if (to.path.startsWith('/auth') && auth.isAuthenticated()) {
+    return next('/app/dashboard')
   }
 
   next()

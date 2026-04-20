@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const correo = ref('')
+const router = useRouter()
 
 const handleForgot = async () => {
   try {
@@ -29,10 +31,21 @@ const handleForgot = async () => {
   <v-card class="pa-6" style="max-width: 400px; margin:auto;">
     <h2 class="mb-4">Recuperar contraseña</h2>
 
-    <v-text-field v-model="correo" label="Correo" />
+    <v-text-field
+      v-model="correo"
+      label="Correo"
+    />
 
     <v-btn @click="handleForgot" block color="blue">
       Enviar correo
     </v-btn>
+
+    <!-- 🔐 IR A LOGIN -->
+    <div class="text-center mt-4">
+      <a @click="router.push('/auth/login')" style="cursor:pointer;">
+        ¿Recuerdas tu contraseña? Inicia sesión
+      </a>
+    </div>
+
   </v-card>
 </template>

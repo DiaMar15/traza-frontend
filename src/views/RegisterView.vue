@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const nombre = ref('')
-const apellido = ref('')
 const correo = ref('')
 const password = ref('')
 
-const handleRegister = async () => {
+const router = useRouter()
+
+const register = async () => {
   try {
     const res = await fetch('http://localhost:3333/api/v1/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nombre: nombre.value,
-        apellido: apellido.value,
         correo: correo.value,
         password: password.value
       })
@@ -26,6 +27,7 @@ const handleRegister = async () => {
     }
 
     alert('Usuario creado correctamente')
+    router.push('/auth/login')
 
   } catch (error: any) {
     alert(error.message)
@@ -34,16 +36,27 @@ const handleRegister = async () => {
 </script>
 
 <template>
-  <v-card class="pa-6" style="max-width: 500px; margin:auto;">
-    <h2 class="mb-4">Registro</h2>
+  <v-card class="pa-6" elevation="8">
 
-    <v-text-field v-model="nombre" label="Nombre" />
-    <v-text-field v-model="apellido" label="Apellido" />
-    <v-text-field v-model="correo" label="Correo" />
-    <v-text-field v-model="password" label="Contraseña" type="password" />
+    <h2 class="text-center mb-4">Registro</h2>
 
-    <v-btn @click="handleRegister" block color="green">
-      Registrarse
-    </v-btn>
+    <v-form @submit.prevent="register">
+
+      <v-text-field v-model="nombre" label="Nombre" required />
+      <v-text-field v-model="correo" label="Correo" type="email" required />
+      <v-text-field v-model="password" label="Contraseña" type="password" required />
+
+      <v-btn type="submit" color="purple" block>
+        Registrarse
+      </v-btn>
+
+    </v-form>
+
+    <div class="text-center mt-4">
+      <a @click="router.push('/auth/login')" style="cursor:pointer;">
+        ¿Ya tienes cuenta? Inicia sesión
+      </a>
+    </div>
+
   </v-card>
 </template>
