@@ -1,23 +1,41 @@
-const API = "http://localhost:3333/api/v1"
+const API = 'http://localhost:3333/api/v1'
 
-export async function obtenerTotalRutas() {
+const headers = (token: string) => ({
+  Authorization: `Bearer ${token}`,
+})
 
-  const res = await fetch(`${API}/rutas/count`)
-
-  if (!res.ok) {
-    throw new Error("Error obteniendo rutas")
-  }
-
-  return res.json()
+export async function obtenerTotalRutas(token: string) {
+  const res = await fetch(`${API}/rutas/count`, { headers: headers(token) })
+  const data = await res.json()
+  return data
 }
 
-export async function obtenerTotalKilometros() {
+export async function obtenerTotalKilometros(token: string) {
+  const res = await fetch(`${API}/rutas/kilometros`, { headers: headers(token) })
+  const data = await res.json()
+  return data
+}
 
-  const res = await fetch(`${API}/rutas/kilometros`)
+export async function obtenerTotalConductores(token: string) {
+  const res = await fetch(`${API}/conductores/count`, { headers: headers(token) })
+  const data = await res.json()
+  return data
+}
 
-  if (!res.ok) {
-    throw new Error("Error obteniendo kilómetros")
-  }
+export async function obtenerTotalViajes(token: string) {
+  const res = await fetch(`${API}/viajes/count`, { headers: headers(token) })
+  const data = await res.json()
+  return data
+}
 
-  return res.json()
+export async function obtenerRutasPorDia(token: string) {
+  const res = await fetch(`${API}/rutas/por-dia`, { headers: headers(token) })
+  const data = await res.json()
+  return data
+}
+
+export async function obtenerKilometrosPorZona(token: string) {
+  const res = await fetch(`${API}/rutas/por-zona`, { headers: headers(token) })
+  const data = await res.json()
+  return data
 }

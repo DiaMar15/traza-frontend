@@ -69,7 +69,15 @@
         to="/app/usuarios"
         @click="closeDrawer"
       />
+      
+      <v-divider class="my-2" />
 
+      <!-- LOGOUT -->
+      <v-list-item
+        prepend-icon="mdi-logout"
+        title="Cerrar sesión"
+        @click="logout"
+      />
     </v-list>
   </v-navigation-drawer>
 </template>
