@@ -62,6 +62,14 @@
         @click="closeDrawer"
       />
 
+        <!-- CONDUCTORES -->
+      <v-list-item
+        prepend-icon="mdi-steering"
+        title="Conductores"
+        to="/app/conductores"
+        @click="closeDrawer"
+      />
+
       <!-- USUARIOS -->
       <v-list-item
         prepend-icon="mdi-account-group"

@@ -1,16 +1,81 @@
 <script setup lang="ts">
 
-import ExcelUploader from "@/components/ExcelUploader.vue"
 import TablaRutas from "@/components/TablaRutas.vue"
 
 import { ref } from "vue"
 
-const tabla = ref<InstanceType<typeof TablaRutas> | null>(null)
+import GoogleSheetsService
+from "@/services/googleSheetsService"
+
+/*
+--------------------------------
+SERVICE
+--------------------------------
+*/
+
+const googleSheetsService =
+  new GoogleSheetsService()
+
+/*
+--------------------------------
+TABLA
+--------------------------------
+*/
+
+const tabla =
+  ref<InstanceType<typeof TablaRutas> | null>(null)
+
+/*
+--------------------------------
+LOADING
+--------------------------------
+*/
+
+const loading = ref(false)
+
+/*
+--------------------------------
+RECARGAR TABLA
+--------------------------------
+*/
 
 function recargarTabla() {
 
   tabla.value?.cargarRutas()
+}
 
+/*
+--------------------------------
+SINCRONIZAR
+--------------------------------
+*/
+
+async function syncRutas() {
+
+  try {
+
+    loading.value = true
+
+    const response =
+      await googleSheetsService
+        .sincronizarRutas()
+
+    alert(response.message)
+
+    recargarTabla()
+
+  } catch (error) {
+
+    console.error(error)
+
+    alert(
+      "Error sincronizando rutas"
+    )
+
+  } finally {
+
+    loading.value = false
+  }
 }
 
 </script>
@@ -19,17 +84,28 @@ function recargarTabla() {
 
 <v-row>
 
-<v-col cols="12">
+  <v-col cols="12">
 
-<ExcelUploader @importado="recargarTabla" />
+    <div class="d-flex justify-end">
 
-</v-col>
+      <v-btn
+        color="success"
+        prepend-icon="mdi-sync"
+        :loading="loading"
+        @click="syncRutas"
+      >
+        Sincronizar Google Sheets
+      </v-btn>
 
-<v-col cols="12">
+    </div>
 
-<TablaRutas ref="tabla" />
+  </v-col>
 
-</v-col>
+  <v-col cols="12">
+
+    <TablaRutas ref="tabla" />
+
+  </v-col>
 
 </v-row>
 

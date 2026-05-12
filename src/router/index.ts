@@ -12,54 +12,208 @@ import CrearRutaView from "@/views/CrearRutaView.vue"
 import UsuariosView from "@/views/UsuariosView.vue"
 import LoginView from "@/views/LoginView.vue"
 
+// 🔥 NUEVAS VISTAS
+import RendimientoView from "@/views/RendimientoView.vue"
+
 const router = createRouter({
   history: createWebHistory(),
+
   routes: [
 
-    // 🔁 raíz → login
+    /* --------------------------
+       REDIRECCIÓN INICIAL
+    -------------------------- */
     {
       path: '/',
+
       redirect: '/auth/login'
     },
 
-    // 🔓 AUTH (SIN SIDEBAR)
+    /* --------------------------
+       🔓 AUTH (SIN SIDEBAR)
+    -------------------------- */
     {
       path: '/auth',
+
       component: AuthLayout,
+
       children: [
-        { path: 'login', component: LoginView },
-        { path: 'register', component: () => import('@/views/RegisterView.vue') },
-        { path: 'forgot-password', component: () => import('@/views/ForgotPasswordView.vue') },
-        { path: 'reset-password', component: () => import('@/views/ResetPasswordView.vue') }
+
+        {
+          path: 'login',
+
+          component: LoginView
+        },
+
+        {
+          path: 'register',
+
+          component: () =>
+            import(
+              '@/views/RegisterView.vue'
+            )
+        },
+
+        {
+          path: 'forgot-password',
+
+          component: () =>
+            import(
+              '@/views/ForgotPasswordView.vue'
+            )
+        },
+
+        {
+          path: 'reset-password',
+
+          component: () =>
+            import(
+              '@/views/ResetPasswordView.vue'
+            )
+        }
+
       ]
     },
 
-    // 🔐 APP (CON SIDEBAR)
+    /* --------------------------
+       🔐 APP (CON SIDEBAR)
+    -------------------------- */
     {
       path: '/app',
+
       component: WireframeLayout,
-      meta: { requiresAuth: true },
+
+      meta: {
+
+        requiresAuth: true
+
+      },
+
       children: [
-        { path: 'dashboard', component: DashboardView },
-        { path: 'rutas', component: RutasView },
-        { path: 'crearrutas', component: CrearRutaView },
-        { path: 'usuarios', component: UsuariosView },
-        { path: 'vehiculos', component: () => import('@/views/VehiculosView.vue') }
+
+        /* --------------------------
+           DASHBOARD PRINCIPAL
+        -------------------------- */
+        {
+          path: 'dashboard',
+
+          component: DashboardView
+        },
+
+        /* --------------------------
+           INDICADORES 🔥
+        -------------------------- */
+        {
+          path: 'dashboard/rendimiento',
+
+          component: RendimientoView
+        },
+
+        {
+          path: 'dashboard/costos',
+
+          component: () =>
+            import(
+              '@/views/CostosView.vue'
+            )
+        },
+
+        {
+          path: 'dashboard/personal',
+
+          component: () =>
+            import(
+              '@/views/PersonalView.vue'
+            )
+        },
+
+        /* --------------------------
+           MÓDULOS
+        -------------------------- */
+        {
+          path: 'rutas',
+
+          component: RutasView
+        },
+
+        {
+          path: 'crearrutas',
+
+          component: CrearRutaView
+        },
+
+        {
+          path: 'usuarios',
+
+          component: UsuariosView
+        },
+
+        {
+          path: 'vehiculos',
+
+          component: () =>
+            import(
+              '@/views/VehiculosView.vue'
+            )
+        },
+
+        /* --------------------------
+           🚛 CONDUCTORES
+        -------------------------- */
+        {
+          path: 'conductores',
+
+          component: () =>
+            import(
+              '@/views/ConductoresView.vue'
+            )
+        }
+
       ]
     }
   ]
 })
 
-// 🔐 GUARD
+/* --------------------------
+   🔐 GUARD DE AUTENTICACIÓN
+-------------------------- */
 router.beforeEach((to, from, next) => {
-  const auth = authSetStore()
 
-  if (to.matched.some(r => r.meta.requiresAuth) && !auth.isAuthenticated()) {
-    return next('/auth/login')
+  const auth =
+    authSetStore()
+
+  if (
+
+    to.matched.some(
+      r => r.meta.requiresAuth
+    )
+
+    &&
+
+    !auth.isAuthenticated()
+
+  ) {
+
+    return next(
+      '/auth/login'
+    )
   }
 
-  if (to.path.startsWith('/auth') && auth.isAuthenticated()) {
-    return next('/app/dashboard')
+  if (
+
+    to.path.startsWith(
+      '/auth'
+    )
+
+    &&
+
+    auth.isAuthenticated()
+
+  ) {
+
+    return next(
+      '/app/dashboard'
+    )
   }
 
   next()

@@ -1,0 +1,533 @@
+<script setup lang="ts">
+import { ref, onMounted, computed } from 'vue'
+
+type CostoRuta = {
+  fecha: string
+  placa: string
+  ruta: string
+  zona: string
+  total_kilometros: number
+  combustible: number
+  peajes: number
+  calibrada: number
+  parqueadero: number
+  taxis: number
+}
+
+const costos = ref<CostoRuta[]>([])
+
+const filtros = ref({
+  desde: '',
+  hasta: '',
+  placa: '',
+  ruta: '',
+})
+
+function money(valor: number) {
+  return Number(valor || 0).toLocaleString('es-CO')
+}
+
+/* =========================
+   FETCH
+========================= */
+
+async function cargar() {
+  const res = await fetch('http://localhost:3333/api/v1/dashboard/costos-detalle')
+
+  const data = await res.json()
+
+  costos.value = Array.isArray(data)
+    ? data.map((i: any) => ({
+        fecha: i.fecha ?? '',
+        placa: i.placa ?? '',
+        ruta: i.ruta ?? '',
+        zona: i.zona ?? '',
+        total_kilometros: Number(i.total_kilometros) || 0,
+        combustible: Number(i.combustible) || 0,
+        peajes: Number(i.peajes) || 0,
+        calibrada: Number(i.calibrada) || 0,
+        parqueadero: Number(i.parqueadero) || 0,
+        taxis: Number(i.taxis) || 0,
+      }))
+    : []
+}
+
+onMounted(cargar)
+
+/* =========================
+   FILTROS
+========================= */
+
+const placas = computed(() => [...new Set(costos.value.map((i) => i.placa))])
+
+const costosFiltrados = computed(() => {
+  return costos.value.filter((item) => {
+    const p = item.fecha.split('/')
+
+    if (p.length !== 3) return false
+
+    const fechaItem = new Date(Number(p[2]), Number(p[0]) - 1, Number(p[1]))
+
+    const desde = filtros.value.desde ? new Date(filtros.value.desde) : null
+
+    const hasta = filtros.value.hasta ? new Date(filtros.value.hasta + 'T23:59:59') : null
+
+    return (
+      (!desde || fechaItem >= desde) &&
+      (!hasta || fechaItem <= hasta) &&
+      (!filtros.value.placa || item.placa === filtros.value.placa) &&
+      (!filtros.value.ruta || item.ruta.toLowerCase().includes(filtros.value.ruta.toLowerCase()))
+    )
+  })
+})
+
+/* =========================
+   TOTALES
+========================= */
+
+const totales = computed(() => {
+  let km = 0
+  let combustible = 0
+  let peajes = 0
+  let calibrada = 0
+  let parqueadero = 0
+  let taxis = 0
+
+  costosFiltrados.value.forEach((i) => {
+    km += i.total_kilometros > 0 ? i.total_kilometros : 0
+
+    combustible += i.combustible
+    peajes += i.peajes
+    calibrada += i.calibrada
+    parqueadero += i.parqueadero
+    taxis += i.taxis
+  })
+
+  return {
+    km,
+    combustible,
+    peajes,
+    calibrada,
+    parqueadero,
+    taxis,
+    total: combustible + peajes + calibrada + parqueadero + taxis,
+  }
+})
+
+const costoPorKm = computed(() =>
+  totales.value.km > 0 ? totales.value.total / totales.value.km : 0,
+)
+
+/* =========================
+   ANALÍTICAS
+========================= */
+
+const rankingVehiculos = computed(() => {
+  const map = new Map<string, number>()
+
+  costosFiltrados.value.forEach((i) => {
+    const total = i.combustible + i.peajes + i.calibrada + i.parqueadero + i.taxis
+
+    map.set(i.placa, (map.get(i.placa) || 0) + total)
+  })
+
+  return Array.from(map.entries())
+    .map(([placa, total]) => ({
+      placa,
+      total,
+    }))
+    .sort((a, b) => b.total - a.total)
+})
+
+const rankingRutas = computed(() => {
+  const map = new Map<string, number>()
+
+  costosFiltrados.value.forEach((i) => {
+    const total = i.combustible + i.peajes + i.calibrada + i.parqueadero + i.taxis
+
+    map.set(i.ruta, (map.get(i.ruta) || 0) + total)
+  })
+
+  return Array.from(map.entries())
+    .map(([ruta, total]) => ({
+      ruta,
+      total,
+    }))
+    .sort((a, b) => b.total - a.total)
+})
+
+const maxCostoVehiculo = computed(() => Math.max(...rankingVehiculos.value.map((v) => v.total), 1))
+
+function limpiarFiltros() {
+  filtros.value = {
+    desde: '',
+    hasta: '',
+    placa: '',
+    ruta: '',
+  }
+}
+
+/* =========================
+   HEADERS
+========================= */
+
+const headers = [
+  { title: 'Fecha', key: 'fecha' },
+  { title: 'Placa', key: 'placa' },
+  { title: 'Ruta', key: 'ruta' },
+  { title: 'Kilómetros', key: 'total_kilometros' },
+  { title: 'Combustible', key: 'combustible' },
+  { title: 'Peajes', key: 'peajes' },
+  { title: 'Calibrada', key: 'calibrada' },
+  { title: 'Parqueadero', key: 'parqueadero' },
+  { title: 'Taxis', key: 'taxis' },
+  { title: 'Total', key: 'total' },
+]
+</script>
+
+<template>
+  <v-container>
+    <h2 class="text-h5 font-weight-bold mb-5">Costos por Ruta</h2>
+
+    <!-- FILTROS -->
+    <v-card class="pa-4 mb-4 glass-card" rounded="xl" elevation="8">
+      <v-row>
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="filtros.desde"
+            type="date"
+            label="Desde"
+            variant="outlined"
+            density="compact"
+          />
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-text-field
+            v-model="filtros.hasta"
+            type="date"
+            label="Hasta"
+            variant="outlined"
+            density="compact"
+          />
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-select
+            v-model="filtros.placa"
+            :items="placas"
+            label="Placa"
+            variant="outlined"
+            density="compact"
+          />
+        </v-col>
+
+        <v-col cols="12" md="3">
+          <v-text-field v-model="filtros.ruta" label="Ruta" variant="outlined" density="compact" />
+        </v-col>
+
+        <v-col cols="12">
+          <v-btn color="red" prepend-icon="mdi-filter-remove" @click="limpiarFiltros">
+            Limpiar filtros
+          </v-btn>
+        </v-col>
+      </v-row>
+    </v-card>
+
+    <!-- KPIs -->
+    <v-row class="mb-4">
+      <!-- KM -->
+      <v-col cols="12" md="3">
+        <v-card class="pa-2 compact-card card-blue" rounded="xl" elevation="8">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box blue-box">
+              <v-icon icon="mdi-road-variant" size="18" />
+            </div>
+
+            <div>
+              <div class="text-caption font-weight-bold">Kilómetros</div>
+
+              <div class="text-subtitle-1 font-weight-bold">
+                {{ totales.km }}
+              </div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- COMBUSTIBLE -->
+      <v-col cols="12" md="3">
+        <v-card class="pa-2 compact-card card-orange" rounded="xl" elevation="8">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box orange-box">
+              <v-icon icon="mdi-fuel" size="18" />
+            </div>
+
+            <div>
+              <div class="text-caption font-weight-bold">Combustible</div>
+
+              <div class="text-subtitle-1 font-weight-bold">${{ money(totales.combustible) }}</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- PEAJES -->
+      <v-col cols="12" md="3">
+        <v-card class="pa-2 compact-card card-purple" rounded="xl" elevation="8">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box purple-box">
+              <v-icon icon="mdi-boom-gate-outline" size="18" />
+            </div>
+
+            <div>
+              <div class="text-caption font-weight-bold">Peajes</div>
+
+              <div class="text-subtitle-1 font-weight-bold">${{ money(totales.peajes) }}</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- TOTAL -->
+      <v-col cols="12" md="3">
+        <v-card class="pa-2 compact-card card-green" rounded="xl" elevation="8">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box green-box">
+              <v-icon icon="mdi-cash-multiple" size="18" />
+            </div>
+
+            <div>
+              <div class="text-caption font-weight-bold">Total</div>
+
+              <div class="text-subtitle-1 font-weight-bold">${{ money(totales.total) }}</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- ALERTAS -->
+    <v-row class="mb-4">
+      <v-col cols="12" md="4">
+        <v-alert type="warning" variant="tonal" border="start" rounded="lg" density="compact">
+          ⛽ Combustible representa el mayor gasto operativo
+        </v-alert>
+      </v-col>
+
+      <v-col cols="12" md="4">
+        <v-alert type="info" variant="tonal" border="start" rounded="lg" density="compact">
+          🚛 {{ rankingVehiculos[0]?.placa }}
+          lidera los costos logísticos
+        </v-alert>
+      </v-col>
+
+      <v-col cols="12" md="4">
+        <v-alert type="success" variant="tonal" border="start" rounded="lg" density="compact">
+          💰 Costo promedio: ${{ money(Math.round(costoPorKm)) }}
+          por km
+        </v-alert>
+      </v-col>
+    </v-row>
+
+    <!-- TABLA -->
+    <v-card class="glass-card pa-2" rounded="xl" elevation="8">
+      <v-data-table
+        :headers="headers"
+        :items="costosFiltrados"
+        :items-per-page="10"
+        hover
+        density="comfortable"
+        class="tabla-costos"
+      >
+        <template #item.placa="{ item }">
+          <v-chip color="primary" variant="tonal" size="small">
+            {{ item.placa }}
+          </v-chip>
+        </template>
+
+        <template #item.ruta="{ item }">
+          <v-chip color="grey" variant="outlined" size="small"> Ruta {{ item.ruta }} </v-chip>
+        </template>
+
+        <template #item.combustible="{ item }">
+          <v-chip color="orange" variant="tonal" size="small">
+            ${{ money(item.combustible) }}
+          </v-chip>
+        </template>
+
+        <template #item.peajes="{ item }">
+          <v-chip color="purple" variant="tonal" size="small"> ${{ money(item.peajes) }} </v-chip>
+        </template>
+
+        <template #item.total="{ item }">
+          <v-chip color="green" variant="tonal" size="small">
+            ${{
+              money(item.combustible + item.peajes + item.calibrada + item.parqueadero + item.taxis)
+            }}
+          </v-chip>
+        </template>
+      </v-data-table>
+    </v-card>
+
+    <!-- RANKINGS -->
+    <v-row class="mt-5">
+      <!-- VEHÍCULOS -->
+      <v-col cols="12" md="6">
+        <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
+          <div class="d-flex align-center justify-space-between mb-4">
+            <h3 class="text-subtitle-1 font-weight-bold">Vehículos más costosos</h3>
+
+            <v-chip color="red" variant="tonal" size="small"> Top 5 </v-chip>
+          </div>
+
+          <div v-for="(v, index) in rankingVehiculos.slice(0, 5)" :key="v.placa" class="mb-4">
+            <div class="d-flex justify-space-between mb-1">
+              <div class="d-flex align-center ga-2">
+                <v-avatar size="22" color="red">
+                  {{ index + 1 }}
+                </v-avatar>
+
+                <span class="font-weight-bold text-body-2">
+                  {{ v.placa }}
+                </span>
+              </div>
+
+              <span class="text-body-2"> ${{ money(v.total) }} </span>
+            </div>
+
+            <v-progress-linear
+              :model-value="(v.total / maxCostoVehiculo) * 100"
+              height="10"
+              rounded
+              color="red"
+              bg-color="#2b1d1d"
+            />
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- RUTAS -->
+      <v-col cols="12" md="6">
+        <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
+          <div class="d-flex align-center justify-space-between mb-4">
+            <h3 class="text-subtitle-1 font-weight-bold">Rutas más costosas</h3>
+
+            <v-chip color="orange" variant="tonal" size="small"> Top 5 </v-chip>
+          </div>
+
+          <div v-for="(r, index) in rankingRutas.slice(0, 5)" :key="r.ruta" class="mb-3">
+            <div class="d-flex justify-space-between align-center">
+              <div class="d-flex align-center ga-2">
+                <v-avatar size="22" color="orange">
+                  {{ index + 1 }}
+                </v-avatar>
+
+                <span class="font-weight-bold text-body-2"> Ruta {{ r.ruta }} </span>
+              </div>
+
+              <v-chip color="orange" variant="tonal" size="small"> ${{ money(r.total) }} </v-chip>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>
+
+<style scoped>
+/* GLASS */
+.glass-card {
+  background: linear-gradient(135deg, rgba(35, 35, 35, 0.96), rgba(25, 25, 25, 0.96));
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  color: white;
+
+  backdrop-filter: blur(10px);
+}
+
+/* CARDS */
+.compact-card {
+  min-height: 78px;
+
+  display: flex;
+  align-items: center;
+
+  transition: 0.2s;
+
+  color: white;
+}
+
+.compact-card:hover {
+  transform: translateY(-2px);
+}
+
+/* ICON BOX */
+.icon-box {
+  width: 34px;
+  height: 34px;
+
+  border-radius: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: white;
+
+  flex-shrink: 0;
+}
+
+.blue-box {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.orange-box {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.purple-box {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.green-box {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* KPI COLORS */
+.card-blue {
+  background: linear-gradient(135deg, #1565c0, #1e88e5);
+}
+
+.card-orange {
+  background: linear-gradient(135deg, #ef6c00, #fb8c00);
+}
+
+.card-purple {
+  background: linear-gradient(135deg, #6a1b9a, #8e24aa);
+}
+
+.card-green {
+  background: linear-gradient(135deg, #2e7d32, #43a047);
+}
+
+/* TABLA */
+.tabla-costos :deep(table) {
+  background: transparent;
+}
+
+.tabla-costos :deep(thead th) {
+  background: #1e1e1e;
+  color: white;
+  font-weight: bold;
+}
+
+.tabla-costos :deep(tbody tr:nth-child(even)) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tabla-costos :deep(tbody tr:hover) {
+  background: rgba(255, 255, 255, 0.05);
+}
+</style>

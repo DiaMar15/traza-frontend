@@ -1,90 +1,111 @@
-import type { Ruta } from "@/types/ruta"
+const API =
+  "http://localhost:3333/api/v1/rutas"
 
-const API = "http://localhost:3333/api/v1"
-
-export interface PaginatedRutas {
-  data: Ruta[]
-  meta: {
-    total: number
-    perPage: number
-    currentPage: number
-    lastPage: number
-  }
-}
+/* -------------------------
+   OBTENER RUTAS
+------------------------- */
 
 export async function obtenerRutas(
-  page = 1,
-  limit = 10,
-  q = ""
-): Promise<PaginatedRutas> {
+  page: number,
+  limit: number,
+  search = ""
+) {
 
-  const res = await fetch(`${API}/rutas?page=${page}&limit=${limit}&q=${q}`)
+  const response = await fetch(
 
-  if (!res.ok) {
-    throw new Error("Error cargando rutas")
-  }
+    `${API}?page=${page}&limit=${limit}&q=${encodeURIComponent(search || "")}`
 
-  return res.json()
+  )
+
+  return await response.json()
 }
 
+/* -------------------------
+   OBTENER UNA RUTA
+------------------------- */
 
-export async function crearRuta(data: any) {
+export async function obtenerRuta(
+  id: number
+) {
 
-  const res = await fetch(`${API}/rutas`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
+  const response = await fetch(
 
-  const json = await res.json()
+    `${API}/${id}`
 
-  console.log("CREAR:", json)
+  )
 
-  if (!res.ok) {
-    throw new Error("Error creando ruta")
-  }
-
-  return json
+  return await response.json()
 }
 
+/* -------------------------
+   CREAR
+------------------------- */
 
-export async function actualizarRuta(id: number, data: any) {
+export async function crearRuta(
+  data: any
+) {
 
-  const res = await fetch(`${API}/rutas/${id}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
+  const response = await fetch(
+    API,
+    {
+      method: "POST",
 
-  const json = await res.json()
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
 
-  console.log("ACTUALIZAR:", json)
+      body: JSON.stringify(data)
+    }
+  )
 
-  if (!res.ok) {
-    throw new Error("Error actualizando ruta")
-  }
-
-  return json
+  return await response.json()
 }
 
+/* -------------------------
+   ACTUALIZAR
+------------------------- */
 
-export async function eliminarRuta(id: number) {
+export async function actualizarRuta(
+  id: number,
+  data: any
+) {
 
-  const res = await fetch(`${API}/rutas/${id}`, {
-    method: "DELETE"
-  })
+  const response = await fetch(
 
-  const json = await res.json()
+    `${API}/${id}`,
 
-  console.log("ELIMINAR:", json)
+    {
+      method: "PUT",
 
-  if (!res.ok) {
-    throw new Error("Error eliminando ruta")
-  }
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
 
-  return json
+      body: JSON.stringify(data)
+    }
+  )
+
+  return await response.json()
+}
+
+/* -------------------------
+   ELIMINAR
+------------------------- */
+
+export async function eliminarRuta(
+  id: number
+) {
+
+  const response = await fetch(
+
+    `${API}/${id}`,
+
+    {
+      method: "DELETE"
+    }
+  )
+
+  return await response.json()
 }
