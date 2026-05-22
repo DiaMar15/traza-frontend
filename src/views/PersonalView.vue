@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  ref,
-  onMounted,
-  computed
-} from "vue"
+import { ref, onMounted, computed } from 'vue'
 
 /* --------------------------
    TIPOS
@@ -18,8 +14,15 @@ type RutaConductor = {
 
 type PersonalData = {
   semana?: number
+
   conductores: number
+
   auxiliares: number
+
+  totalHoras: number
+
+  promedioHoras: number
+
   rutasPorConductor: RutaConductor[]
 }
 
@@ -29,8 +32,15 @@ type PersonalData = {
 
 const data = ref<PersonalData>({
   semana: 0,
+
   conductores: 0,
+
   auxiliares: 0,
+
+  totalHoras: 0,
+
+  promedioHoras: 0,
+
   rutasPorConductor: [],
 })
 
@@ -41,62 +51,35 @@ const loading = ref(true)
 -------------------------- */
 
 async function cargar() {
-
   try {
-
-    const res = await fetch(
-      "http://localhost:3333/api/v1/dashboard/personal"
-    )
+    const res = await fetch('http://localhost:3333/api/v1/dashboard/personal')
 
     const json = await res.json()
 
     data.value = {
+      semana: Number(json.semana) || 0,
 
-      semana:
-        Number(json.semana) || 0,
+      conductores: Number(json.conductores) || 0,
 
-      conductores:
-        Number(json.conductores) || 0,
+      auxiliares: Number(json.auxiliares) || 0,
+      totalHoras: Number(json.totalHoras) || 0,
+      promedioHoras: Number(json.promedioHoras) || 0,
 
-      auxiliares:
-        Number(json.auxiliares) || 0,
+      rutasPorConductor: Array.isArray(json.rutasPorConductor)
+        ? json.rutasPorConductor.map((item: any) => ({
+            conductor: item.conductor ?? 'Sin nombre',
 
-      rutasPorConductor:
+            total: Number(item.total) || 0,
 
-        Array.isArray(
-          json.rutasPorConductor
-        )
+            horas: Number(item.horas) || 0,
 
-          ? json.rutasPorConductor.map(
-              (item: any) => ({
-
-                conductor:
-                  item.conductor ??
-                  "Sin nombre",
-
-                total:
-                  Number(item.total) || 0,
-
-                horas:
-                  Number(item.horas) || 0,
-
-                extras:
-                  Number(item.extras) || 0,
-              })
-            )
-
-          : [],
+            extras: Number(item.extras) || 0,
+          }))
+        : [],
     }
-
   } catch (error) {
-
-    console.error(
-      "Error personal:",
-      error
-    )
-
+    console.error('Error personal:', error)
   } finally {
-
     loading.value = false
   }
 }
@@ -108,62 +91,36 @@ onMounted(cargar)
 -------------------------- */
 
 const totalHorasExtras = computed(() =>
-  data.value.rutasPorConductor.reduce(
-    (acc, item) =>
-      acc + item.extras,
-    0
-  )
+  data.value.rutasPorConductor.reduce((acc, item) => acc + item.extras, 0),
 )
 
-const personalCercanoLimite =
-  computed(() =>
+const personalCercanoLimite = computed(
+  () => data.value.rutasPorConductor.filter((item) => item.horas >= 40 && item.horas <= 44).length,
+)
 
-    data.value.rutasPorConductor.filter(
-      item =>
-        item.horas >= 40 &&
-        item.horas <= 44
-    ).length
-  )
-
-const personalExcedido =
-  computed(() =>
-
-    data.value.rutasPorConductor.filter(
-      item => item.horas > 44
-    ).length
-  )
+const personalExcedido = computed(
+  () => data.value.rutasPorConductor.filter((item) => item.horas > 44).length,
+)
 
 /* --------------------------
    ALERTAS
 -------------------------- */
 
 const alertas = computed(() => [
-
   {
-    texto:
-      `${personalExcedido.value} personas exceden el límite semanal`,
+    texto: `${personalExcedido.value} personas exceden el límite semanal`,
 
-    tipo: "error" as const,
+    tipo: 'error' as const,
 
-    icono: "mdi-alert",
+    icono: 'mdi-alert',
   },
 
   {
-    texto:
-      `${personalCercanoLimite.value} personas cerca de las 44h o con 44h cumplidas`,
+    texto: `${personalCercanoLimite.value} personas cerca de las 44h o con 44h cumplidas`,
 
-    tipo: "warning" as const,
+    tipo: 'warning' as const,
 
-    icono: "mdi-clock-alert",
-  },
-
-  {
-    texto:
-      `${totalHorasExtras.value.toFixed(1)} horas extras acumuladas`,
-
-    tipo: "info" as const,
-
-    icono: "mdi-timer-plus",
+    icono: 'mdi-clock-alert',
   },
 ])
 
@@ -171,443 +128,285 @@ const alertas = computed(() => [
    COLOR ESTADO
 -------------------------- */
 
-function colorHoras(
-  horas: number
-) {
-
+function colorHoras(horas: number) {
   if (horas > 44) {
-    return "red"
+    return 'red'
   }
 
   if (horas >= 40) {
-    return "orange"
+    return 'orange'
   }
 
-  return "green"
+  return 'green'
 }
 
 /* --------------------------
    TEXTO ESTADO
 -------------------------- */
 
-function estadoHoras(
-  horas: number
-) {
-
+function estadoHoras(horas: number) {
   if (horas > 44) {
-    return "Excedido"
+    return 'Excedido'
   }
 
   if (horas >= 40) {
-    return "Límite"
+    return 'Límite'
   }
 
-  return "Normal"
+  return 'Normal'
 }
 </script>
 
 <template>
+  <v-container fluid class="py-2">
+    <!-- HEADER -->
 
-<v-container fluid class="py-2">
+    <div class="d-flex align-center justify-space-between mb-4">
+      <div>
+        <h2 class="text-h5 font-weight-bold">Personal Operativo</h2>
 
-  <!-- HEADER -->
-
-  <div
-    class="d-flex align-center justify-space-between mb-4"
-  >
-
-    <div>
-
-      <h2 class="text-h5 font-weight-bold">
-        Personal Operativo
-      </h2>
-
-      <div class="text-caption text-grey">
-        Seguimiento laboral semanal
+        <div class="text-caption text-grey">Seguimiento laboral semanal</div>
       </div>
 
+      <v-chip color="primary" size="large" class="semana-chip"> Semana {{ data.semana }} </v-chip>
     </div>
 
-    <v-chip
-      color="primary"
-      variant="tonal"
-      size="small"
-    >
-      Semana {{ data.semana }}
-    </v-chip>
+    <!-- ALERTAS -->
 
-  </div>
+    <v-row dense class="mb-2">
+      <!-- ALERTAS EXISTENTES -->
 
-  <!-- ALERTAS -->
-
-  <v-row dense class="mb-2">
-
-    <v-col
-      v-for="(alerta, i) in alertas"
-      :key="i"
-      cols="12"
-      md="4"
-    >
-
-      <v-alert
-        :type="alerta.tipo"
-        variant="tonal"
-        border="start"
-        rounded="lg"
-        density="compact"
-        class="mini-alert"
-      >
-
-        <v-icon start size="14">
-          {{ alerta.icono }}
-        </v-icon>
-
-        {{ alerta.texto }}
-
-      </v-alert>
-
-    </v-col>
-
-  </v-row>
-
-  <!-- KPIS -->
-
-  <v-row dense>
-
-    <v-col cols="12" sm="6" md="3">
-
-      <v-card
-        class="mini-card card-blue"
-        elevation="6"
-        rounded="xl"
-      >
-
-        <div
-          class="d-flex align-center ga-3"
+      <v-col v-for="(alerta, i) in alertas" :key="i" cols="12" md="3">
+        <v-alert
+          :type="alerta.tipo"
+          variant="tonal"
+          border="start"
+          rounded="lg"
+          density="compact"
+          class="mini-alert"
         >
+          <v-icon start size="14">
+            {{ alerta.icono }}
+          </v-icon>
 
-          <div class="icon-box">
+          {{ alerta.texto }}
+        </v-alert>
+      </v-col>
 
-            <v-icon size="18">
-              mdi-account-group
-            </v-icon>
+      <!-- HORAS TRABAJADAS -->
 
-          </div>
-
-          <div>
-
-            <div class="mini-title">
-              Conductores
-            </div>
-
-            <div class="mini-number">
-              {{ data.conductores }}
-            </div>
-
-            <div class="mini-subtitle">
-              Personal activo
-            </div>
-
-          </div>
-
-        </div>
-
-      </v-card>
-
-    </v-col>
-
-    <!-- AUX -->
-
-    <v-col cols="12" sm="6" md="3">
-
-      <v-card
-        class="mini-card card-green"
-        elevation="6"
-        rounded="xl"
-      >
-
-        <div
-          class="d-flex align-center ga-3"
+      <v-col cols="12" md="3">
+        <v-alert
+          type="info"
+          variant="tonal"
+          border="start"
+          rounded="lg"
+          density="compact"
+          class="mini-alert"
         >
+          <v-icon start size="14"> mdi-clock-outline </v-icon>
 
-          <div class="icon-box">
+          {{ data.totalHoras }} horas trabajadas esta semana
+        </v-alert>
+      </v-col>
 
-            <v-icon size="18">
-              mdi-account-hard-hat
-            </v-icon>
+      <!-- PROMEDIO SEMANAL -->
 
-          </div>
-
-          <div>
-
-            <div class="mini-title">
-              Auxiliares
-            </div>
-
-            <div class="mini-number">
-              {{ data.auxiliares }}
-            </div>
-
-            <div class="mini-subtitle">
-              Operación diaria
-            </div>
-
-          </div>
-
-        </div>
-
-      </v-card>
-
-    </v-col>
-
-    <!-- EXTRAS -->
-
-    <v-col cols="12" sm="6" md="3">
-
-      <v-card
-        class="mini-card card-orange"
-        elevation="6"
-        rounded="xl"
-      >
-
-        <div
-          class="d-flex align-center ga-3"
+      <v-col cols="12" md="3">
+        <v-alert
+          color="deep-purple"
+          variant="tonal"
+          border="start"
+          rounded="lg"
+          density="compact"
+          class="mini-alert"
         >
+          <v-icon start size="14"> mdi-chart-line </v-icon>
 
-          <div class="icon-box">
+          Promedio semanal:
+          {{ data.promedioHoras }} h
+        </v-alert>
+      </v-col>
+    </v-row>
 
-            <v-icon size="18">
-              mdi-timer-plus
-            </v-icon>
+    <!-- KPIS -->
 
-          </div>
+    <v-row dense>
+      <!-- CONDUCTORES -->
 
-          <div>
-
-            <div class="mini-title">
-              Horas extras
-            </div>
-
-            <div class="mini-number">
-              {{ totalHorasExtras.toFixed(1) }}
-            </div>
-
-            <div class="mini-subtitle">
-              Acumuladas
-            </div>
-
-          </div>
-
-        </div>
-
-      </v-card>
-
-    </v-col>
-
-    <!-- LIMITE -->
-
-    <v-col cols="12" sm="6" md="3">
-
-      <v-card
-        class="mini-card card-purple"
-        elevation="6"
-        rounded="xl"
-      >
-
-        <div
-          class="d-flex align-center ga-3"
-        >
-
-          <div class="icon-box">
-
-            <v-icon size="18">
-              mdi-clock-alert
-            </v-icon>
-
-          </div>
-
-          <div>
-
-            <div class="mini-title">
-              Cerca límite
-            </div>
-
-            <div class="mini-number">
-              {{ personalCercanoLimite }}
-            </div>
-
-            <div class="mini-subtitle">
-              40h - 44h
-            </div>
-
-          </div>
-
-        </div>
-
-      </v-card>
-
-    </v-col>
-
-  </v-row>
-
-  <!-- CARDS -->
-
-  <v-row dense class="mt-3">
-
-    <v-col
-      v-for="item in data.rutasPorConductor"
-      :key="item.conductor"
-      cols="12"
-      sm="6"
-      md="4"
-      lg="3"
-    >
-
-      <v-card
-        class="personal-card"
-        elevation="4"
-        rounded="xl"
-      >
-
-        <!-- TOP -->
-
-        <div
-          class="d-flex justify-space-between align-start"
-        >
-
-          <div
-            class="d-flex ga-2 align-center"
-          >
-
-            <div class="avatar-box">
-
-              <v-icon size="16">
-                mdi-account
-              </v-icon>
-
+      <v-col cols="12" sm="6" md="3">
+        <v-card class="mini-card card-blue" elevation="6" rounded="xl">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box">
+              <v-icon size="18"> mdi-account-group </v-icon>
             </div>
 
             <div>
+              <div class="mini-title">Conductores</div>
 
-              <!-- TOOLTIP -->
-
-              <v-tooltip location="top">
-
-                <template #activator="{ props }">
-
-                  <div
-                    v-bind="props"
-                    class="nombre"
-                  >
-
-                    {{ item.conductor }}
-
-                  </div>
-
-                </template>
-
-                <span>
-                  {{ item.conductor }}
-                </span>
-
-              </v-tooltip>
-
-              <div class="detalle">
-                {{ item.total }} rutas
+              <div class="mini-number">
+                {{ data.conductores }}
               </div>
 
+              <div class="mini-subtitle">Personal activo</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- AUXILIARES -->
+
+      <v-col cols="12" sm="6" md="3">
+        <v-card class="mini-card card-green" elevation="6" rounded="xl">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box">
+              <v-icon size="18"> mdi-account-hard-hat </v-icon>
             </div>
 
+            <div>
+              <div class="mini-title">Auxiliares</div>
+
+              <div class="mini-number">
+                {{ data.auxiliares }}
+              </div>
+
+              <div class="mini-subtitle">Operación diaria</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- HORAS EXTRAS -->
+
+      <v-col cols="12" sm="6" md="3">
+        <v-card class="mini-card card-orange" elevation="6" rounded="xl">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box">
+              <v-icon size="18"> mdi-timer-plus </v-icon>
+            </div>
+
+            <div>
+              <div class="mini-title">Horas extras</div>
+
+              <div class="mini-number">
+                {{ totalHorasExtras.toFixed(1) }}
+              </div>
+
+              <div class="mini-subtitle">Acumuladas</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- CERCA LIMITE -->
+
+      <v-col cols="12" sm="6" md="3">
+        <v-card class="mini-card card-purple" elevation="6" rounded="xl">
+          <div class="d-flex align-center ga-3">
+            <div class="icon-box">
+              <v-icon size="18"> mdi-clock-alert </v-icon>
+            </div>
+
+            <div>
+              <div class="mini-title">Cerca límite</div>
+
+              <div class="mini-number">
+                {{ personalCercanoLimite }}
+              </div>
+
+              <div class="mini-subtitle">40h - 44h</div>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- CARDS -->
+
+    <v-row dense class="mt-3">
+      <v-col
+        v-for="item in data.rutasPorConductor"
+        :key="item.conductor"
+        cols="12"
+        sm="6"
+        md="4"
+        lg="3"
+      >
+        <v-card class="personal-card" elevation="4" rounded="xl">
+          <!-- TOP -->
+
+          <div class="d-flex justify-space-between align-start">
+            <div class="d-flex ga-2 align-center">
+              <div class="avatar-box">
+                <v-icon size="16"> mdi-account </v-icon>
+              </div>
+
+              <div>
+                <!-- TOOLTIP -->
+
+                <v-tooltip location="top">
+                  <template #activator="{ props }">
+                    <div v-bind="props" class="nombre">
+                      {{ item.conductor }}
+                    </div>
+                  </template>
+
+                  <span>
+                    {{ item.conductor }}
+                  </span>
+                </v-tooltip>
+
+                <div class="detalle">{{ item.total }} rutas</div>
+              </div>
+            </div>
+
+            <v-chip :color="colorHoras(item.horas)" size="x-small" variant="flat">
+              {{ estadoHoras(item.horas) }}
+            </v-chip>
           </div>
 
-          <v-chip
-            :color="
-              colorHoras(item.horas)
-            "
-            size="x-small"
-            variant="flat"
-          >
+          <!-- INFO -->
 
-            {{
-              estadoHoras(
-                item.horas
-              )
-            }}
+          <div class="info-grid mt-3">
+            <!-- HORAS -->
 
-          </v-chip>
+            <div class="info-box">
+              <div class="info-label">Horas</div>
 
-        </div>
+              <div
+                :class="[
+                  'info-value',
 
-        <!-- INFO -->
-
-        <div class="info-grid mt-3">
-
-          <div class="info-box">
-
-            <div class="info-label">
-              Horas
+                  item.horas > 44 ? 'text-red' : item.horas >= 40 ? 'text-orange' : 'text-green',
+                ]"
+              >
+                {{ item.horas }} h
+              </div>
             </div>
 
-            <div
-              :class="[
-                'info-value',
+            <!-- EXTRAS -->
 
-                item.horas > 44
-                  ? 'text-red'
+            <div class="info-box">
+              <div class="info-label">Extras</div>
 
-                  : item.horas >= 40
-                  ? 'text-orange'
-
-                  : 'text-green'
-              ]"
-            >
-
-              {{ item.horas }} h
-
+              <div class="info-value">{{ item.extras }} h</div>
             </div>
-
           </div>
-
-          <!-- EXTRAS -->
-
-          <div class="info-box">
-
-            <div class="info-label">
-              Extras
-            </div>
-
-            <div class="info-value">
-
-              {{ item.extras }} h
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </v-card>
-
-    </v-col>
-
-  </v-row>
-
-</v-container>
-
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <style scoped>
-
 /* ALERTAS */
 .mini-alert {
-
   font-size: 11px;
 }
 
 /* KPI */
 
 .mini-card {
-
   min-height: 82px;
 
   padding: 14px;
@@ -622,14 +421,12 @@ function estadoHoras(
 }
 
 .mini-card:hover {
-
   transform: translateY(-2px);
 }
 
 /* ICONOS */
 
 .icon-box {
-
   width: 34px;
 
   height: 34px;
@@ -642,8 +439,7 @@ function estadoHoras(
 
   justify-content: center;
 
-  background:
-    rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.15);
 
   flex-shrink: 0;
 }
@@ -651,21 +447,18 @@ function estadoHoras(
 /* TEXTOS KPI */
 
 .mini-title {
-
   font-size: 11px;
 
   font-weight: 700;
 }
 
 .mini-number {
-
   font-size: 22px;
 
   font-weight: 700;
 }
 
 .mini-subtitle {
-
   font-size: 10px;
 
   opacity: 0.8;
@@ -674,17 +467,9 @@ function estadoHoras(
 /* CARD PERSONAL */
 
 .personal-card {
+  background: linear-gradient(135deg, rgba(40, 40, 40, 0.95), rgba(28, 28, 28, 0.95));
 
-  background:
-    linear-gradient(
-      135deg,
-      rgba(40,40,40,0.95),
-      rgba(28,28,28,0.95)
-    );
-
-  border:
-    1px solid
-    rgba(255,255,255,0.05);
+  border: 1px solid rgba(255, 255, 255, 0.05);
 
   color: white;
 
@@ -702,18 +487,14 @@ function estadoHoras(
 }
 
 .personal-card:hover {
-
   transform: translateY(-3px);
 
-  border:
-    1px solid
-    rgba(255,255,255,0.12);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 /* AVATAR */
 
 .avatar-box {
-
   width: 34px;
 
   height: 34px;
@@ -726,8 +507,7 @@ function estadoHoras(
 
   justify-content: center;
 
-  background:
-    rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
 
   flex-shrink: 0;
 }
@@ -735,7 +515,6 @@ function estadoHoras(
 /* NOMBRE COMPLETO */
 
 .nombre {
-
   font-size: 13px;
 
   font-weight: 700;
@@ -756,7 +535,6 @@ function estadoHoras(
 /* DETALLE */
 
 .detalle {
-
   font-size: 10px;
 
   opacity: 0.7;
@@ -767,11 +545,9 @@ function estadoHoras(
 /* GRID INFO */
 
 .info-grid {
-
   display: grid;
 
-  grid-template-columns:
-    1fr 1fr;
+  grid-template-columns: 1fr 1fr;
 
   gap: 10px;
 
@@ -781,9 +557,7 @@ function estadoHoras(
 /* BOX INFO */
 
 .info-box {
-
-  background:
-    rgba(255,255,255,0.03);
+  background: rgba(255, 255, 255, 0.03);
 
   border-radius: 10px;
 
@@ -801,7 +575,6 @@ function estadoHoras(
 /* LABEL */
 
 .info-label {
-
   font-size: 10px;
 
   opacity: 0.7;
@@ -810,7 +583,6 @@ function estadoHoras(
 /* VALUE */
 
 .info-value {
-
   font-size: 16px;
 
   font-weight: 700;
@@ -821,78 +593,47 @@ function estadoHoras(
 /* COLORES */
 
 .text-red {
-
   color: #ff5252;
 }
 
 .text-orange {
-
   color: #ff9800;
 }
 
 .text-green {
-
   color: #4caf50;
 }
 
 /* COLORES KPI */
 
 .card-blue {
-
-  background:
-    linear-gradient(
-      135deg,
-      #304ffe,
-      #6200ea
-    );
+  background: linear-gradient(135deg, #304ffe, #6200ea);
 }
 
 .card-green {
-
-  background:
-    linear-gradient(
-      135deg,
-      #00a32a,
-      #00c853
-    );
+  background: linear-gradient(135deg, #00a32a, #00c853);
 }
 
 .card-orange {
-
-  background:
-    linear-gradient(
-      135deg,
-      #ef6c00,
-      #ff9100
-    );
+  background: linear-gradient(135deg, #ef6c00, #ff9100);
 }
 
 .card-purple {
-
-  background:
-    linear-gradient(
-      135deg,
-      #9c27b0,
-      #e100ff
-    );
+  background: linear-gradient(135deg, #9c27b0, #e100ff);
 }
 
 /* RESPONSIVE */
 
 @media (max-width: 960px) {
-
   .personal-card {
-
     min-height: auto;
   }
 
   .nombre {
-
     font-size: 12px;
   }
 
   .info-value {
-
     font-size: 14px;
   }
 }
