@@ -1,39 +1,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { Bar } from 'vue-chartjs'
+import { Doughnut } from 'vue-chartjs'
+import ChartDataLabels from 'chartjs-plugin-datalabels'
 
-/* CHART JS */
 import {
   Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
   Title,
   Tooltip,
   Legend,
-  BarElement,
-  CategoryScale,
-  LinearScale,
 } from 'chart.js'
 
-import { Bar } from 'vue-chartjs'
-
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
-
-/* --------------------------
-   TIPOS
--------------------------- */
-
-type TotalResponse = {
-  total: number
-}
-
-type RutasDia = {
-  dia: string
-  total: number
-}
-
-type Zona = {
-  zona: string
-  total: number
-}
-
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels)
 type Card = {
   title: string
   icon: string
@@ -42,66 +23,290 @@ type Card = {
   extra: string
 }
 
-type Vehiculo = {
-  placa: string
-  rutas: number
-  km: number
-  tiempo: number
-  clientes: number
-  peso: number
-  volumen: number
-  efectividad: number
-}
+type DashboardPrincipalResponse = {
+  kpis: {
+    totalRutas: number
+    totalClientes: number
+    totalDinero: number
+    conductoresActivos: number
+    auxiliaresActivos: number
+  }
 
+  detalle: DetalleRuta[]
+}
 /* --------------------------
    TARJETAS
 -------------------------- */
 
 const dashboardCards = ref<Card[]>([
   {
-    title: 'Rutas Registradas',
+    title: 'Total Rutas',
     icon: 'mdi-map-marker-path',
     value: 0,
     color: 'card-blue',
-    extra: '+12% esta semana',
+    extra: 'Operación actual',
   },
 
   {
-    title: 'Kilómetros Recorridos',
-    icon: 'mdi-road-variant',
+    title: 'Total Clientes',
+    icon: 'mdi-account-multiple',
     value: 0,
     color: 'card-cyan',
-    extra: '+8% rendimiento',
+    extra: 'Clientes atendidos',
   },
 
   {
-    title: 'Conductores Activos',
-    icon: 'mdi-account-group',
+    title: 'Dinero Movido',
+    icon: 'mdi-cash',
     value: 0,
-    color: 'card-purple',
-    extra: 'Operación estable',
-  },
-
-  {
-    title: 'Viajes Realizados',
-    icon: 'mdi-truck-delivery',
-    value: 0,
-    color: 'card-orange',
-    extra: '+15 viajes hoy',
+    color: 'card-green',
+    extra: 'Valor total rutas',
   },
 ])
 
-/* --------------------------
-   DATOS
--------------------------- */
+type DetalleRuta = {
+  placa: string
+  zona: string
+  clientes: number
+  peso: number
+  valor: number
+}
 
-const rutasPorDia = ref<RutasDia[]>([])
-const kmPorZona = ref<Zona[]>([])
-const vehiculos = ref<Vehiculo[]>([])
+const dialogDetalle = ref(false)
 
-/* --------------------------
-   ORDEN DÍAS
--------------------------- */
+const detalleSeleccionado = ref<any>(null)
+
+const detalle = ref<DetalleRuta[]>([])
+
+const valorPorZona = computed(() => {
+  const zonas: Record<string, number> = {}
+
+  detalle.value.forEach((item) => {
+    const zona = item.zona || 'SIN ZONA'
+
+    if (!zonas[zona]) {
+      zonas[zona] = 0
+    }
+
+    zonas[zona] += Number(item.valor || 0)
+  })
+
+  return zonas
+})
+
+const detalleChartData = computed(() => {
+  if (!detalleSeleccionado.value) {
+    return {
+      labels: [],
+      datasets: [],
+    }
+  }
+
+  let valor = 0
+  let color = '#42A5F5'
+
+  if (indicadorActivo.value === 'clientes') {
+    valor = Number(detalleSeleccionado.value.clientes || 0)
+    color = '#1976D2'
+  }
+
+  if (indicadorActivo.value === 'peso') {
+    valor = Number(detalleSeleccionado.value.peso || 0)
+    color = '#2E7D32'
+  }
+
+  if (indicadorActivo.value === 'valor') {
+    valor = Number(detalleSeleccionado.value.valor || 0)
+    color = '#FB8C00'
+  }
+
+  return {
+    labels: ['Valor', 'Resto'],
+
+    datasets: [
+      {
+        data: [valor, valor * 0.25],
+
+        backgroundColor: [color, '#2A2A40'],
+
+        borderWidth: 0,
+
+        hoverOffset: 15,
+      },
+    ],
+  }
+})
+const detalleChartOptions = {
+  responsive: true,
+
+  maintainAspectRatio: false,
+
+  plugins: {
+    legend: {
+      position: 'bottom' as const,
+    },
+  },
+}
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+
+  indexAxis: 'y' as const,
+
+  plugins: {
+    legend: {
+      display: false,
+    },
+
+    datalabels: {
+      anchor: 'end' as const,
+      align: 'right' as const,
+
+      color: '#ffffff',
+
+      font: {
+        weight: 'bold' as const,
+        size: 12,
+      },
+
+      formatter: (value: number) => {
+        if (tipoGrafico.value === 'valor') {
+          return '$' + Math.round(value).toLocaleString('es-CO')
+        }
+
+        if (tipoGrafico.value === 'peso') {
+          return value.toLocaleString('es-CO') + ' kg'
+        }
+
+        return value.toLocaleString('es-CO')
+      },
+    },
+  },
+
+  scales: {
+    x: {
+      ticks: {
+        color: '#ffffff',
+      },
+    },
+
+    y: {
+      ticks: {
+        color: '#ffffff',
+      },
+    },
+  },
+}
+
+const indicadorActivo = ref<'clientes' | 'peso' | 'valor'>('clientes')
+const tipoGrafico = ref('clientes')
+const graficoActual = computed(() => {
+  const datos = [...detalle.value]
+
+  // Agrupar por placa
+  const agrupado: Record<string, any> = {}
+
+  datos.forEach((item) => {
+    if (!agrupado[item.placa]) {
+      agrupado[item.placa] = {
+        placa: item.placa,
+        clientes: 0,
+        peso: 0,
+        valor: 0,
+      }
+    }
+
+    agrupado[item.placa].clientes += Number(item.clientes || 0)
+    agrupado[item.placa].peso += Number(item.peso || 0)
+    agrupado[item.placa].valor += Number(item.valor || 0)
+  })
+
+  const datosAgrupados = Object.values(agrupado).sort((a: any, b: any) => {
+    if (tipoGrafico.value === 'clientes') {
+      return b.clientes - a.clientes
+    }
+
+    if (tipoGrafico.value === 'peso') {
+      return b.peso - a.peso
+    }
+
+    return b.valor - a.valor
+  })
+
+  if (tipoGrafico.value === 'zona') {
+    const zonas: Record<string, number> = {}
+
+    datos.forEach((item) => {
+      const zona = item.zona || 'SIN ZONA'
+
+      if (!zonas[zona]) {
+        zonas[zona] = 0
+      }
+
+      zonas[zona] += Number(item.valor || 0)
+    })
+
+    const ordenado = Object.entries(zonas).sort((a, b) => b[1] - a[1])
+    console.log(detalle.value.slice(0, 13))
+    return {
+      labels: ordenado.map((z) => z[0]),
+
+      datasets: [
+        {
+          label: 'Valor por Zona',
+
+          data: ordenado.map((z) => z[1]),
+
+          backgroundColor: '#9C27B0',
+        },
+      ],
+    }
+  }
+
+  let color = '#1976D2'
+  let etiqueta = 'Clientes'
+
+  if (tipoGrafico.value === 'peso') {
+    color = '#2E7D32'
+    etiqueta = 'Peso'
+  }
+
+  if (tipoGrafico.value === 'valor') {
+    color = '#FB8C00'
+    etiqueta = 'Valor'
+  }
+
+  return {
+    labels: datosAgrupados.map((item: any) => item.placa),
+    datasets: [
+      {
+        label: etiqueta,
+
+        data: datosAgrupados.map((item: any) => {
+          if (tipoGrafico.value === 'clientes') {
+            return item.clientes
+          }
+
+          if (tipoGrafico.value === 'peso') {
+            return item.peso
+          }
+
+          return item.valor
+        }),
+
+        backgroundColor: color,
+
+        borderRadius: 8,
+      },
+    ],
+  }
+})
+const tipoFiltro = ref('dia')
+
+const fecha = ref('')
+const semana = ref('')
+const mes = ref('')
 
 const ordenDias = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO']
 
@@ -110,123 +315,6 @@ const normalizar = (texto: string) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .toUpperCase()
-
-/* --------------------------
-   TOPS
--------------------------- */
-
-const maxZona = computed(() => Math.max(...kmPorZona.value.map((z) => z.total), 1))
-
-const vehiculoMasKm = computed(() => [...vehiculos.value].sort((a, b) => b.km - a.km)[0])
-
-const vehiculoMenorRendimiento = computed(
-  () => [...vehiculos.value].sort((a, b) => a.efectividad - b.efectividad)[0],
-)
-
-const zonaMayorDemanda = computed(() => [...kmPorZona.value].sort((a, b) => b.total - a.total)[0])
-
-const diaMasRutas = computed(() => [...rutasPorDia.value].sort((a, b) => b.total - a.total)[0])
-
-/* --------------------------
-   ALERTAS
--------------------------- */
-
-const alertas = computed(() => [
-  {
-    texto: diaMasRutas.value
-      ? `${diaMasRutas.value.dia} registra el mayor número de rutas (${diaMasRutas.value.total})`
-      : 'Sin datos de rutas',
-
-    tipo: 'warning' as const,
-
-    icono: 'mdi-calendar-alert',
-  },
-
-  {
-    texto: kmPorZona.value.length
-      ? `${[...kmPorZona.value].sort((a, b) => a.total - b.total)[0]?.zona} presenta la menor operación logística`
-      : 'Sin zonas destacadas',
-
-    tipo: 'info' as const,
-
-    icono: 'mdi-map-marker-radius',
-  },
-
-  {
-    texto: vehiculoMenorRendimiento.value
-      ? `${vehiculoMenorRendimiento.value.placa} presenta el menor rendimiento operativo`
-      : 'Sin datos operativos',
-
-    tipo: 'error' as const,
-
-    icono: 'mdi-alert-circle',
-  },
-])
-/* --------------------------
-   CHART DATA
--------------------------- */
-
-const chartData = computed(() => ({
-  labels: rutasPorDia.value.map((r) => r.dia),
-
-  datasets: [
-    {
-      label: 'Rutas',
-
-      data: rutasPorDia.value.map((r) => r.total),
-
-      backgroundColor: [
-        '#42A5F5',
-        '#29B6F6',
-        '#26C6DA',
-        '#26A69A',
-        '#66BB6A',
-        '#9CCC65',
-        '#D4E157',
-      ],
-
-      borderRadius: 12,
-
-      borderSkipped: false,
-    },
-  ],
-}))
-
-const chartOptions = {
-  responsive: true,
-
-  maintainAspectRatio: false,
-
-  plugins: {
-    legend: {
-      labels: {
-        color: '#FFFFFF',
-      },
-    },
-  },
-
-  scales: {
-    x: {
-      ticks: {
-        color: '#FFFFFF',
-      },
-
-      grid: {
-        color: '#2A2A40',
-      },
-    },
-
-    y: {
-      ticks: {
-        color: '#FFFFFF',
-      },
-
-      grid: {
-        color: '#2A2A40',
-      },
-    },
-  },
-}
 
 /* --------------------------
    FETCH
@@ -246,190 +334,195 @@ async function fetchJSON<T>(url: string): Promise<T> {
 
 const cargarDashboard = async () => {
   try {
-    const base = 'http://localhost:3333/api/v1/dashboard'
+    const params = new URLSearchParams()
 
-    const [dataRutas, dataKm, dataConductores, dataViajes, dataRutasDia, dataZonas, dataVehiculos] =
-      await Promise.all([
-        fetchJSON<TotalResponse>(`${base}/rutas-count`),
-        fetchJSON<TotalResponse>(`${base}/kilometros`),
-        fetchJSON<TotalResponse>(`${base}/conductores`),
-        fetchJSON<TotalResponse>(`${base}/viajes`),
-        fetchJSON<RutasDia[]>(`${base}/rutas-por-dia`),
-        fetchJSON<Zona[]>(`${base}/km-por-zona`),
-        fetchJSON<Vehiculo[]>(`${base}/rendimiento-vehiculos`),
-      ])
+    params.append('tipo', tipoFiltro.value)
 
-    dashboardCards.value[0]!.value = dataRutas.total
-    dashboardCards.value[1]!.value = dataKm.total
-    dashboardCards.value[2]!.value = dataConductores.total
-    dashboardCards.value[3]!.value = dataViajes.total
+    if (tipoFiltro.value === 'dia' && fecha.value) {
+      params.append('fecha', fecha.value)
+    }
 
-    vehiculos.value = dataVehiculos
+    if (tipoFiltro.value === 'semana' && semana.value) {
+      params.append('semana', semana.value)
+    }
 
-    rutasPorDia.value = dataRutasDia.sort((a, b) => {
-      const diaA = ordenDias.indexOf(normalizar(a.dia))
-      const diaB = ordenDias.indexOf(normalizar(b.dia))
+    if (tipoFiltro.value === 'mes' && mes.value) {
+      params.append('mes', mes.value)
+    }
 
-      return diaA - diaB
-    })
+    const data = await fetchJSON<DashboardPrincipalResponse>(
+      `http://localhost:3333/api/v1/dashboard/principal?${params}`,
+    )
 
-    kmPorZona.value = dataZonas.sort((a, b) => b.total - a.total).slice(0, 10)
+    dashboardCards.value[0]!.value = data.kpis.totalRutas
+    dashboardCards.value[1]!.value = data.kpis.totalClientes
+    dashboardCards.value[2]!.value = data.kpis.totalDinero
+
+    detalle.value = data.detalle
   } catch (error) {
     console.error('Error dashboard:', error)
   }
 }
 
+const abrirDetalle = (item: any) => {
+  detalleSeleccionado.value = item
+
+  dialogDetalle.value = true
+}
+
 onMounted(() => {
   cargarDashboard()
+})
+
+const headersTabla = computed(() => {
+  const headers: any[] = []
+
+  if (tipoFiltro.value === 'dia') {
+    headers.push({
+      title: 'Fecha',
+      key: 'fecha',
+    })
+  }
+
+  if (tipoFiltro.value === 'semana') {
+    headers.push({
+      title: 'Semana',
+      key: 'semana',
+    })
+  }
+
+  if (tipoFiltro.value === 'mes') {
+    headers.push({
+      title: 'Mes',
+      key: 'mes',
+    })
+  }
+
+  headers.push(
+    { title: 'Placa', key: 'placa' },
+    { title: 'Zona', key: 'zona' },
+    { title: 'Clientes', key: 'clientes' },
+    { title: 'Peso', key: 'peso' },
+    { title: 'Valor', key: 'valor' },
+  )
+
+  return headers
 })
 </script>
 
 <template>
   <v-container>
     <h2 class="text-h5 font-weight-bold mb-4">Dashboard Logístico</h2>
+    <v-row class="mb-4">
+      <v-col cols="12">
+        <v-btn-toggle
+          v-model="tipoFiltro"
+          mandatory
+          color="primary"
+          @update:model-value="cargarDashboard"
+        >
+          <v-btn value="dia"> Día </v-btn>
 
-    <!-- ALERTAS -->
-    <v-row class="mb-3">
-      <v-col v-for="(alerta, i) in alertas" :key="i" cols="12" md="4">
-        <v-alert :type="alerta.tipo" variant="tonal" border="start" rounded="lg" density="compact">
-          <v-icon start size="18">
-            {{ alerta.icono }}
-          </v-icon>
+          <v-btn value="semana"> Semana </v-btn>
 
-          {{ alerta.texto }}
-        </v-alert>
+          <v-btn value="mes"> Mes </v-btn>
+        </v-btn-toggle>
+      </v-col>
+
+      <!-- FILTRO DÍA -->
+      <v-col cols="12" md="3" v-if="tipoFiltro === 'dia'">
+        <v-text-field v-model="fecha" type="date" label="Fecha" @change="cargarDashboard" />
+      </v-col>
+
+      <!-- FILTRO SEMANA -->
+      <v-col cols="12" md="3" v-if="tipoFiltro === 'semana'">
+        <v-text-field
+          v-model="semana"
+          label="Semana"
+          type="number"
+          min="1"
+          max="53"
+          @change="cargarDashboard"
+        />
+      </v-col>
+
+      <!-- FILTRO MES -->
+      <v-col cols="12" md="3" v-if="tipoFiltro === 'mes'">
+        <v-select
+          v-model="mes"
+          label="Mes"
+          :items="[
+            'ENERO',
+            'FEBRERO',
+            'MARZO',
+            'ABRIL',
+            'MAYO',
+            'JUNIO',
+            'JULIO',
+            'AGOSTO',
+            'SEPTIEMBRE',
+            'OCTUBRE',
+            'NOVIEMBRE',
+            'DICIEMBRE',
+          ]"
+          @update:model-value="cargarDashboard"
+        />
       </v-col>
     </v-row>
-
-    <!-- TARJETAS -->
-    <v-row class="mt-1">
-      <v-col v-for="card in dashboardCards" :key="card.title" cols="12" sm="6" md="3">
-        <v-card class="dashboard-card compact-card" :class="card.color" elevation="10" rounded="xl">
-          <div class="d-flex align-center ga-3">
-            <!-- ICONO -->
-            <div class="icon-box">
-              <v-icon :icon="card.icon" size="20" />
-            </div>
-
-            <!-- TEXTO -->
-            <div>
-              <div class="text-caption font-weight-bold">
-                {{ card.title }}
-              </div>
-
-              <div class="text-subtitle-1 font-weight-bold mt-1">
-                {{ card.value }}
-              </div>
-
-              <div class="text-caption text-grey-lighten-1">
-                {{ card.extra }}
-              </div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- GRÁFICOS -->
     <v-row class="mt-5">
-      <!-- RUTAS -->
-      <v-col cols="12" md="6">
-        <v-card elevation="10" rounded="xl" class="pa-5 glass-card">
-          <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 font-weight-bold">Rutas por día</h3>
+      <v-col cols="12">
+        <v-card rounded="xl" elevation="10">
+          <v-card-title> Analisis Operativo </v-card-title>
+          <v-card-subtitle class="pb-4">
+            <v-btn
+              color="primary"
+              size="large"
+              prepend-icon="mdi-chart-box"
+              @click="dialogDetalle = true"
+            >
+              Analizar Operación
+            </v-btn>
+          </v-card-subtitle>
+          <v-data-table :items="detalle" :headers="headersTabla">
+            <template #item.peso="{ item }">
+              {{ Number(item.peso || 0).toLocaleString('es-CO') }} kg
+            </template>
 
-            <v-chip color="primary" variant="tonal" size="small"> Operación semanal </v-chip>
-          </div>
+            <template #item.valor="{ item }">
+              $
+              {{ Math.round(Number(item.valor || 0)).toLocaleString('es-CO') }}
+            </template>
+          </v-data-table>
+          <v-dialog v-model="dialogDetalle" max-width="1700" height="90vh">
+            <v-card rounded="xl">
+              <v-card-title class="text-h5"> Analisis Operativo </v-card-title>
+              <v-card-text>
+                <v-row>
+                  <v-col cols="12">
+                    <v-btn-toggle v-model="tipoGrafico" mandatory color="primary">
+                      <v-btn value="clientes"> Clientes </v-btn>
 
-          <div class="chart-container">
-            <Bar :data="chartData" :options="chartOptions" />
-          </div>
-        </v-card>
-      </v-col>
+                      <v-btn value="peso"> Peso </v-btn>
 
-      <!-- ZONAS -->
-      <v-col cols="12" md="6">
-        <v-card elevation="10" rounded="xl" class="pa-5 glass-card">
-          <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 font-weight-bold">Kilómetros por zona</h3>
+                      <v-btn value="valor"> Valor </v-btn>
 
-            <v-chip color="green" variant="tonal" size="small"> Top 10 </v-chip>
-          </div>
+                      <v-btn value="zona"> Zona </v-btn>
+                    </v-btn-toggle>
+                  </v-col>
+                </v-row>
 
-          <div v-for="(zona, index) in kmPorZona" :key="zona.zona" class="mb-5">
-            <div class="d-flex justify-space-between align-center mb-1">
-              <div class="d-flex align-center ga-2">
-                <v-avatar size="22" color="green">
-                  <span class="text-caption">
-                    {{ index + 1 }}
-                  </span>
-                </v-avatar>
-
-                <span class="font-weight-bold text-caption">
-                  {{ zona.zona }}
-                </span>
-              </div>
-
-              <span class="text-caption"> {{ zona.total }} km </span>
-            </div>
-
-            <v-progress-linear
-              :model-value="(zona.total / maxZona) * 100"
-              height="12"
-              rounded
-              bg-color="#1f3324"
-              color="green"
-            />
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- INSIGHTS -->
-    <v-row class="mt-5">
-      <!-- VEHÍCULO -->
-      <v-col cols="12" md="6">
-        <v-card class="pa-5 insight-card-blue" elevation="10" rounded="xl">
-          <div class="d-flex align-center justify-space-between">
-            <div>
-              <div class="text-overline mb-1">VEHÍCULO MÁS ACTIVO</div>
-
-              <div class="text-h6 font-weight-bold">
-                {{ vehiculoMasKm?.placa }}
-              </div>
-
-              <div class="text-subtitle-1 mt-1">{{ vehiculoMasKm?.km }} km</div>
-
-              <div class="text-caption mt-3 text-grey-lighten-1">
-                Mayor rendimiento operativo actual
-              </div>
-            </div>
-
-            <v-icon icon="mdi-truck-fast" size="54" color="white" />
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- ZONA -->
-      <v-col cols="12" md="6">
-        <v-card class="pa-5 insight-card-green" elevation="10" rounded="xl">
-          <div class="d-flex align-center justify-space-between">
-            <div>
-              <div class="text-overline mb-1">ZONA LÍDER</div>
-
-              <div class="text-h6 font-weight-bold">
-                {{ zonaMayorDemanda?.zona }}
-              </div>
-
-              <div class="text-subtitle-1 mt-1">{{ zonaMayorDemanda?.total }} km</div>
-
-              <div class="text-caption mt-3 text-grey-lighten-1">
-                Mayor concentración logística actual
-              </div>
-            </div>
-
-            <v-icon icon="mdi-map-marker-radius" size="54" color="white" />
-          </div>
+                <v-row class="mt-4">
+                  <v-col cols="12">
+                    <v-card rounded="xl" elevation="6" class="pa-4" min-height="600">
+                      <div style="height: 500px">
+                        <Bar :data="graficoActual" :options="chartOptions" />
+                      </div>
+                    </v-card>
+                  </v-col>
+                </v-row>
+              </v-card-text>
+            </v-card>
+          </v-dialog>
         </v-card>
       </v-col>
     </v-row>
@@ -437,10 +530,6 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.chart-container {
-  height: 320px;
-}
-
 /* KPI */
 .dashboard-card {
   transition: 0.3s;
@@ -449,6 +538,10 @@ onMounted(() => {
 
 .dashboard-card:hover {
   transform: translateY(-4px);
+}
+
+.chart-container {
+  height: 350px;
 }
 
 .compact-card {
@@ -493,42 +586,16 @@ onMounted(() => {
   background: linear-gradient(135deg, #ef6c00, #fb8c00);
 }
 
-/* GLASS */
-.glass-card {
-  background: linear-gradient(135deg, rgba(35, 35, 35, 0.95), rgba(25, 25, 25, 0.95));
+.donut-center {
+  position: absolute;
 
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
-  color: white;
+  text-align: center;
 
-  backdrop-filter: blur(10px);
-
-  transition: 0.3s;
-}
-
-.glass-card:hover {
-  transform: translateY(-4px);
-}
-
-/* INSIGHTS */
-.insight-card-blue {
-  background: linear-gradient(135deg, #1565c0, #1e88e5);
-
-  color: white;
-
-  transition: 0.3s;
-}
-
-.insight-card-green {
-  background: linear-gradient(135deg, #2e7d32, #43a047);
-
-  color: white;
-
-  transition: 0.3s;
-}
-
-.insight-card-blue:hover,
-.insight-card-green:hover {
-  transform: translateY(-4px);
+  pointer-events: none;
 }
 </style>
