@@ -150,9 +150,16 @@ const detalleChartOptions = {
 
 const chartOptions = {
   responsive: true,
+
   maintainAspectRatio: false,
 
   indexAxis: 'y' as const,
+
+  layout: {
+    padding: {
+      right: 80,
+    },
+  },
 
   plugins: {
     legend: {
@@ -161,7 +168,10 @@ const chartOptions = {
 
     datalabels: {
       anchor: 'end' as const,
-      align: 'right' as const,
+
+      align: 'end' as const,
+
+      offset: 8,
 
       color: '#ffffff',
 
@@ -257,6 +267,8 @@ const graficoActual = computed(() => {
           label: 'Valor por Zona',
 
           data: ordenado.map((z) => z[1]),
+
+          borderRadius: 8,
 
           backgroundColor: '#9C27B0',
         },
