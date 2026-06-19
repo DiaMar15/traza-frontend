@@ -6,6 +6,7 @@ type CostoRuta = {
   placa: string
   ruta: string
   zona: string
+  tarifa: number
   total_kilometros: number
   combustible: number
   peajes: number
@@ -15,7 +16,7 @@ type CostoRuta = {
 }
 
 const costos = ref<CostoRuta[]>([])
-
+const dialogPerdidas = ref(false)
 const filtros = ref({
   desde: '',
   hasta: '',
@@ -42,6 +43,7 @@ async function cargar() {
         placa: i.placa ?? '',
         ruta: i.ruta ?? '',
         zona: i.zona ?? '',
+        tarifa: Number(i.tarifa) || 0,
         total_kilometros: Number(i.total_kilometros) || 0,
         combustible: Number(i.combustible) || 0,
         peajes: Number(i.peajes) || 0,
@@ -84,8 +86,8 @@ const costosFiltrados = computed(() => {
 /* =========================
    TOTALES
 ========================= */
-
 const totales = computed(() => {
+  let tarifa = 0
   let km = 0
   let combustible = 0
   let peajes = 0
@@ -94,6 +96,8 @@ const totales = computed(() => {
   let taxis = 0
 
   costosFiltrados.value.forEach((i) => {
+    tarifa += i.tarifa || 0
+
     km += i.total_kilometros > 0 ? i.total_kilometros : 0
 
     combustible += i.combustible
@@ -104,6 +108,7 @@ const totales = computed(() => {
   })
 
   return {
+    tarifa,
     km,
     combustible,
     peajes,
@@ -117,6 +122,23 @@ const totales = computed(() => {
 const costoPorKm = computed(() =>
   totales.value.km > 0 ? totales.value.total / totales.value.km : 0,
 )
+const rutasConPerdida = computed(() => {
+  return costosFiltrados.value.filter((ruta) => {
+    const costoTotal =
+      ruta.combustible + ruta.peajes + ruta.calibrada + ruta.parqueadero + ruta.taxis
+
+    return costoTotal > ruta.tarifa
+  })
+})
+
+const sobreCostoTotal = computed(() => {
+  return rutasConPerdida.value.reduce((acc, ruta) => {
+    const costoTotal =
+      ruta.combustible + ruta.peajes + ruta.calibrada + ruta.parqueadero + ruta.taxis
+
+    return acc + (costoTotal - ruta.tarifa)
+  }, 0)
+})
 
 /* =========================
    ANALÍTICAS
@@ -175,13 +197,22 @@ const headers = [
   { title: 'Fecha', key: 'fecha' },
   { title: 'Placa', key: 'placa' },
   { title: 'Ruta', key: 'ruta' },
-  { title: 'Kilómetros', key: 'total_kilometros' },
+  { title: 'Tarifa', key: 'tarifa' },
   { title: 'Combustible', key: 'combustible' },
   { title: 'Peajes', key: 'peajes' },
   { title: 'Calibrada', key: 'calibrada' },
   { title: 'Parqueadero', key: 'parqueadero' },
   { title: 'Taxis', key: 'taxis' },
   { title: 'Total', key: 'total' },
+]
+
+const headersPerdidas = [
+  { title: 'Fecha', key: 'fecha' },
+  { title: 'Placa', key: 'placa' },
+  { title: 'Ruta', key: 'ruta' },
+  { title: 'Tarifa', key: 'tarifa' },
+  { title: 'Costo', key: 'costo' },
+  { title: 'Pérdida', key: 'perdida' },
 ]
 </script>
 
@@ -236,25 +267,22 @@ const headers = [
 
     <!-- KPIs -->
     <v-row class="mb-4">
-      <!-- KM -->
+      <!-- TARIFA -->
       <v-col cols="12" md="3">
         <v-card class="pa-2 compact-card card-blue" rounded="xl" elevation="8">
           <div class="d-flex align-center ga-3">
             <div class="icon-box blue-box">
-              <v-icon icon="mdi-road-variant" size="18" />
+              <v-icon icon="mdi-cash" size="18" />
             </div>
 
             <div>
-              <div class="text-caption font-weight-bold">Kilómetros</div>
+              <div class="text-caption font-weight-bold">Tarifa</div>
 
-              <div class="text-subtitle-1 font-weight-bold">
-                {{ totales.km }}
-              </div>
+              <div class="text-subtitle-1 font-weight-bold">${{ money(totales.tarifa) }}</div>
             </div>
           </div>
         </v-card>
       </v-col>
-
       <!-- COMBUSTIBLE -->
       <v-col cols="12" md="3">
         <v-card class="pa-2 compact-card card-orange" rounded="xl" elevation="8">
@@ -308,28 +336,37 @@ const headers = [
     </v-row>
 
     <!-- ALERTAS -->
-    <v-row class="mb-4">
-      <v-col cols="12" md="4">
-        <v-alert type="warning" variant="tonal" border="start" rounded="lg" density="compact">
-          ⛽ Combustible representa el mayor gasto operativo
-        </v-alert>
-      </v-col>
+    <v-col cols="12" md="4">
+      <v-alert
+        :type="rutasConPerdida.length > 0 ? 'error' : 'success'"
+        variant="tonal"
+        border="start"
+        rounded="lg"
+        density="compact"
+        class="text-caption cursor-pointer"
+        @click="dialogPerdidas = true"
+      >
+        <template v-if="rutasConPerdida.length > 0">
+          <div>
+            🚨 {{ rutasConPerdida.length }}
+            rutas superaron la tarifa asignada
+          </div>
 
-      <v-col cols="12" md="4">
-        <v-alert type="info" variant="tonal" border="start" rounded="lg" density="compact">
-          🚛 {{ rankingVehiculos[0]?.placa }}
-          lidera los costos logísticos
-        </v-alert>
-      </v-col>
+          <div class="text-caption text-grey-darken-1 mt-1">Dar clic para ver más detalles</div>
+        </template>
 
-      <v-col cols="12" md="4">
-        <v-alert type="success" variant="tonal" border="start" rounded="lg" density="compact">
-          💰 Costo promedio: ${{ money(Math.round(costoPorKm)) }}
-          por km
-        </v-alert>
-      </v-col>
-    </v-row>
+        <template v-else>
+          <div>✅ Ninguna ruta superó la tarifa asignada</div>
+        </template>
+      </v-alert>
+    </v-col>
 
+    <v-col cols="12" md="4">
+      <v-alert type="success" variant="tonal" border="start" rounded="lg" density="compact">
+        💰 Costo promedio: ${{ money(Math.round(costoPorKm)) }}
+        por km
+      </v-alert>
+    </v-col>
     <!-- TABLA -->
     <v-card class="glass-card pa-2" rounded="xl" elevation="8">
       <v-data-table
@@ -354,6 +391,10 @@ const headers = [
           <v-chip color="orange" variant="tonal" size="small">
             ${{ money(item.combustible) }}
           </v-chip>
+        </template>
+
+        <template #item.tarifa="{ item }">
+          <v-chip color="primary" variant="tonal" size="small"> ${{ money(item.tarifa) }} </v-chip>
         </template>
 
         <template #item.peajes="{ item }">
@@ -432,6 +473,46 @@ const headers = [
         </v-card>
       </v-col>
     </v-row>
+    <v-dialog v-model="dialogPerdidas" max-width="1200">
+      <v-card rounded="xl">
+        <v-card-title class="text-h5"> Rutas con Sobrecosto </v-card-title>
+
+        <v-card-subtitle> Sobrecosto acumulado: ${{ money(sobreCostoTotal) }} </v-card-subtitle>
+
+        <v-card-text>
+          <v-data-table
+            class="tabla-costos"
+            :headers="headersPerdidas"
+            :items="
+              rutasConPerdida.map((ruta) => {
+                const costo =
+                  ruta.combustible + ruta.peajes + ruta.calibrada + ruta.parqueadero + ruta.taxis
+
+                return {
+                  ...ruta,
+                  costo,
+                  perdida: costo - ruta.tarifa,
+                }
+              })
+            "
+          >
+            <template #item.tarifa="{ item }"> ${{ money(item.tarifa) }} </template>
+
+            <template #item.costo="{ item }"> ${{ money(item.costo) }} </template>
+
+            <template #item.perdida="{ item }">
+              <v-chip color="red" variant="tonal"> ${{ money(item.perdida) }} </v-chip>
+            </template>
+          </v-data-table>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn color="primary" @click="dialogPerdidas = false"> Cerrar </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -513,14 +594,14 @@ const headers = [
 }
 
 /* TABLA */
-.tabla-costos :deep(table) {
-  background: transparent;
+.tabla-costos :deep(thead) {
+  background: #1f2937;
 }
 
 .tabla-costos :deep(thead th) {
-  background: #1e1e1e;
-  color: white;
-  font-weight: bold;
+  color: white !important;
+  font-weight: 700 !important;
+  border-bottom: 2px solid #0062ff;
 }
 
 .tabla-costos :deep(tbody tr:nth-child(even)) {
