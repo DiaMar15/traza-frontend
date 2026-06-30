@@ -1,400 +1,295 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
-/* --------------------------
-   TIPOS
--------------------------- */
+import PersonalKPIs from '@/components/personal/PersonalKPIs.vue'
+import PersonalIndicadores from '@/components/personal/PersonalIndicadores.vue'
+import PersonalFiltros from '@/components/personal/PersonalFiltros.vue'
+import PersonalDetalleModal from '@/components/personal/modals/PersonalDetalleModal.vue'
+import PersonalTabla from '@/components/personal/PersonalTabla.vue'
 
-type RutaConductor = {
-  conductor: string
-  total: number
-  horas: number
-  extras: number
+import {
+  obtenerPersonalSemanal,
+  obtenerPersonalDiario,
+  obtenerPersonalMensual,
+} from '@/services/personalService'
+
+/* ==========================
+   DATA
+========================== */
+
+const data = ref<any>({})
+const loading = ref(false)
+
+/* ==========================
+   MODALES
+========================== */
+
+const mostrarNoCumplen = ref(false)
+const mostrarHorasExtra = ref(false)
+
+/* ==========================
+   PERÍODO
+========================== */
+
+const periodo = ref<'diario' | 'semanal' | 'mensual'>('semanal')
+
+/* ==========================
+   FILTROS
+========================== */
+
+const fecha = ref('')
+const semana = ref<number | null>(null)
+const mes = ref('')
+const cargo = ref('Todos')
+const buscar = ref('')
+
+/* ==========================
+   LISTAS
+========================== */
+
+const cargos = ['Todos', 'Conductores', 'Auxiliares', 'Supernumerarios']
+
+const meses = [
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+]
+
+const semanas = ref<number[]>([])
+
+/* ==========================
+   MAPA CARGOS
+========================== */
+
+const mapaCargo: Record<string, string> = {
+  Todos: '',
+  Conductores: 'CONDUCTOR',
+  Auxiliares: 'AUXILIAR',
+  Supernumerarios: 'SUPERNUMERARIO',
 }
 
-type PersonalData = {
-  semana?: number
+/* ==========================
+   COMPUTED
+========================== */
 
-  conductores: number
+const trabajadoresFiltrados = computed(() => {
+  let trabajadores = data.value.horasPersonal || []
 
-  auxiliares: number
+  const cargoFiltro = mapaCargo[cargo.value]
 
-  totalHoras: number
+  if (cargoFiltro) {
+    trabajadores = trabajadores.filter((trabajador: any) =>
+      trabajador.cargo?.toUpperCase().includes(cargoFiltro),
+    )
+  }
 
-  promedioHoras: number
+  if (buscar.value.trim()) {
+    const texto = buscar.value.trim().toUpperCase()
 
-  rutasPorConductor: RutaConductor[]
-}
+    trabajadores = trabajadores.filter((trabajador: any) =>
+      trabajador.nombre?.toUpperCase().includes(texto),
+    )
+  }
 
-/* --------------------------
-   STATE
--------------------------- */
-
-const data = ref<PersonalData>({
-  semana: 0,
-
-  conductores: 0,
-
-  auxiliares: 0,
-
-  totalHoras: 0,
-
-  promedioHoras: 0,
-
-  rutasPorConductor: [],
+  return trabajadores
 })
 
-const loading = ref(true)
+/* ==========================
+   CARGAR INFORMACIÓN
+========================== */
 
-/* --------------------------
-   FETCH
--------------------------- */
+async function cargarPersonal() {
+  loading.value = true
 
-async function cargar() {
   try {
-    const res = await fetch('http://localhost:3333/api/v1/dashboard/personal')
+    if (periodo.value === 'diario') {
+      if (!fecha.value) return
 
-    const json = await res.json()
+      data.value = await obtenerPersonalDiario(fecha.value)
+    }
 
-    data.value = {
-      semana: Number(json.semana) || 0,
+    if (periodo.value === 'semanal') {
+      data.value = await obtenerPersonalSemanal(semana.value ?? undefined)
 
-      conductores: Number(json.conductores) || 0,
+      if (data.value.semanas) {
+        semanas.value = data.value.semanas
+      }
 
-      auxiliares: Number(json.auxiliares) || 0,
-      totalHoras: Number(json.totalHoras) || 0,
-      promedioHoras: Number(json.promedioHoras) || 0,
+      if (!semana.value) {
+        semana.value = data.value.semana
+      }
+    }
 
-      rutasPorConductor: Array.isArray(json.rutasPorConductor)
-        ? json.rutasPorConductor.map((item: any) => ({
-            conductor: item.conductor ?? 'Sin nombre',
+    if (periodo.value === 'mensual') {
+      if (!mes.value) {
+        mes.value = meses[new Date().getMonth()] ?? ''
+      }
 
-            total: Number(item.total) || 0,
-
-            horas: Number(item.horas) || 0,
-
-            extras: Number(item.extras) || 0,
-          }))
-        : [],
+      data.value = await obtenerPersonalMensual(mes.value)
     }
   } catch (error) {
-    console.error('Error personal:', error)
+    console.error(error)
   } finally {
     loading.value = false
   }
 }
 
-onMounted(cargar)
+/* ==========================
+   INICIALIZACIÓN
+========================== */
 
-/* --------------------------
-   KPIS
--------------------------- */
+onMounted(() => {
+  fecha.value = new Date().toISOString().slice(0, 10)
 
-const totalHorasExtras = computed(() =>
-  data.value.rutasPorConductor.reduce((acc, item) => acc + item.extras, 0),
-)
+  cargarPersonal()
+})
 
-const personalCercanoLimite = computed(
-  () => data.value.rutasPorConductor.filter((item) => item.horas >= 40 && item.horas <= 44).length,
-)
+/* ==========================
+   WATCHS
+========================== */
 
-const personalExcedido = computed(
-  () => data.value.rutasPorConductor.filter((item) => item.horas > 44).length,
-)
-
-/* --------------------------
-   ALERTAS
--------------------------- */
-
-const alertas = computed(() => [
-  {
-    texto: `${personalExcedido.value} personas exceden el límite semanal`,
-
-    tipo: 'error' as const,
-
-    icono: 'mdi-alert',
-  },
-
-  {
-    texto: `${personalCercanoLimite.value} personas cerca de las 44h o con 44h cumplidas`,
-
-    tipo: 'warning' as const,
-
-    icono: 'mdi-clock-alert',
-  },
-])
-
-/* --------------------------
-   COLOR ESTADO
--------------------------- */
-
-function colorHoras(horas: number) {
-  if (horas > 44) {
-    return 'red'
+watch(periodo, () => {
+  if (periodo.value === 'diario' && !fecha.value) {
+    fecha.value = new Date().toISOString().slice(0, 10)
   }
 
-  if (horas >= 40) {
-    return 'orange'
+  if (periodo.value === 'mensual' && !mes.value) {
+    mes.value = meses[new Date().getMonth()] ?? ''
   }
 
-  return 'green'
-}
+  cargarPersonal()
+})
 
-/* --------------------------
-   TEXTO ESTADO
--------------------------- */
-
-function estadoHoras(horas: number) {
-  if (horas > 44) {
-    return 'Excedido'
+watch(fecha, () => {
+  if (periodo.value === 'diario') {
+    cargarPersonal()
   }
+})
 
-  if (horas >= 40) {
-    return 'Límite'
+watch(semana, (nuevaSemana) => {
+  if (periodo.value === 'semanal' && nuevaSemana !== null) {
+    cargarPersonal()
   }
+})
 
-  return 'Normal'
-}
+watch(mes, (nuevoMes) => {
+  if (periodo.value === 'mensual' && nuevoMes) {
+    cargarPersonal()
+  }
+})
 </script>
 
 <template>
   <v-container fluid class="py-2">
-    <!-- HEADER -->
+    <!-- =======================
+         HEADER
+    ======================== -->
 
     <div class="d-flex align-center justify-space-between mb-4">
       <div>
         <h2 class="text-h5 font-weight-bold">Personal Operativo</h2>
 
-        <div class="text-caption text-grey">Seguimiento laboral semanal</div>
+        <div class="text-caption text-grey">Seguimiento laboral del personal</div>
       </div>
 
-      <v-chip color="primary" size="large" class="semana-chip"> Semana {{ data.semana }} </v-chip>
+      <v-chip color="primary" size="large" class="semana-chip">
+        <template v-if="periodo === 'diario'">
+          {{ data.fecha }}
+        </template>
+
+        <template v-else-if="periodo === 'semanal'"> Semana {{ data.semana }} </template>
+
+        <template v-else>
+          {{ data.mes }}
+        </template>
+      </v-chip>
     </div>
 
-    <!-- ALERTAS -->
+    <!-- =======================
+         TABS
+    ======================== -->
 
-    <v-row dense class="mb-2">
-      <!-- ALERTAS EXISTENTES -->
+    <v-tabs v-model="periodo" color="primary" grow class="mb-4">
+      <v-tab value="diario">
+        <v-icon start>mdi-calendar-today</v-icon>
+        Diario
+      </v-tab>
 
-      <v-col v-for="(alerta, i) in alertas" :key="i" cols="12" md="3">
-        <v-alert
-          :type="alerta.tipo"
-          variant="tonal"
-          border="start"
-          rounded="lg"
-          density="compact"
-          class="mini-alert"
-        >
-          <v-icon start size="14">
-            {{ alerta.icono }}
-          </v-icon>
+      <v-tab value="semanal">
+        <v-icon start>mdi-calendar-week</v-icon>
+        Semanal
+      </v-tab>
 
-          {{ alerta.texto }}
-        </v-alert>
-      </v-col>
+      <v-tab value="mensual">
+        <v-icon start>mdi-calendar-month</v-icon>
+        Mensual
+      </v-tab>
+    </v-tabs>
 
-      <!-- HORAS TRABAJADAS -->
+    <!-- =======================
+         FILTROS
+    ======================== -->
 
-      <v-col cols="12" md="3">
-        <v-alert
-          type="info"
-          variant="tonal"
-          border="start"
-          rounded="lg"
-          density="compact"
-          class="mini-alert"
-        >
-          <v-icon start size="14"> mdi-clock-outline </v-icon>
+    <PersonalFiltros
+      v-model:fecha="fecha"
+      v-model:semana="semana"
+      v-model:mes="mes"
+      v-model:cargo="cargo"
+      v-model:buscar="buscar"
+      :periodo="periodo"
+      :semanas="semanas"
+      :meses="meses"
+      :cargos="cargos"
+    />
+    <!-- =======================
+         CONTENIDO
+    ======================== -->
 
-          {{ data.totalHoras }} horas trabajadas esta semana
-        </v-alert>
-      </v-col>
+    <PersonalKPIs
+      :conductores="data.conductores"
+      :auxiliares="data.auxiliares"
+      :supernumerarios="data.supernumerarios"
+      :retirados="data.retirados"
+    />
 
-      <!-- PROMEDIO SEMANAL -->
+    <PersonalIndicadores
+      :cumplen-jornada="data.cumplenJornada"
+      :no-cumplen-jornada="data.noCumplenJornada"
+      :trabajadores-con-horas-extra="data.trabajadoresConHorasExtra"
+      :total-horas="data.totalHoras"
+      :promedio-horas="data.promedioHoras"
+      @ver-no-cumplen="mostrarNoCumplen = true"
+      @ver-horas-extra="mostrarHorasExtra = true"
+    />
 
-      <v-col cols="12" md="3">
-        <v-alert
-          color="deep-purple"
-          variant="tonal"
-          border="start"
-          rounded="lg"
-          density="compact"
-          class="mini-alert"
-        >
-          <v-icon start size="14"> mdi-chart-line </v-icon>
+    <PersonalTabla :trabajadores="trabajadoresFiltrados" />
 
-          Promedio semanal:
-          {{ data.promedioHoras }} h
-        </v-alert>
-      </v-col>
-    </v-row>
+    <!-- =======================
+         MODALES
+    ======================== -->
 
-    <!-- KPIS -->
+    <PersonalDetalleModal
+      v-model="mostrarNoCumplen"
+      titulo="Trabajadores que NO cumplen la jornada laboral"
+      :trabajadores="data.detalleNoCumplen || []"
+      tipo="negativas"
+    />
 
-    <v-row dense>
-      <!-- CONDUCTORES -->
-
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="mini-card card-blue" elevation="6" rounded="xl">
-          <div class="d-flex align-center ga-3">
-            <div class="icon-box">
-              <v-icon size="18"> mdi-account-group </v-icon>
-            </div>
-
-            <div>
-              <div class="mini-title">Conductores</div>
-
-              <div class="mini-number">
-                {{ data.conductores }}
-              </div>
-
-              <div class="mini-subtitle">Personal activo</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- AUXILIARES -->
-
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="mini-card card-green" elevation="6" rounded="xl">
-          <div class="d-flex align-center ga-3">
-            <div class="icon-box">
-              <v-icon size="18"> mdi-account-hard-hat </v-icon>
-            </div>
-
-            <div>
-              <div class="mini-title">Auxiliares</div>
-
-              <div class="mini-number">
-                {{ data.auxiliares }}
-              </div>
-
-              <div class="mini-subtitle">Operación diaria</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- HORAS EXTRAS -->
-
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="mini-card card-orange" elevation="6" rounded="xl">
-          <div class="d-flex align-center ga-3">
-            <div class="icon-box">
-              <v-icon size="18"> mdi-timer-plus </v-icon>
-            </div>
-
-            <div>
-              <div class="mini-title">Horas extras</div>
-
-              <div class="mini-number">
-                {{ totalHorasExtras.toFixed(1) }}
-              </div>
-
-              <div class="mini-subtitle">Acumuladas</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-
-      <!-- CERCA LIMITE -->
-
-      <v-col cols="12" sm="6" md="3">
-        <v-card class="mini-card card-purple" elevation="6" rounded="xl">
-          <div class="d-flex align-center ga-3">
-            <div class="icon-box">
-              <v-icon size="18"> mdi-clock-alert </v-icon>
-            </div>
-
-            <div>
-              <div class="mini-title">Cerca límite</div>
-
-              <div class="mini-number">
-                {{ personalCercanoLimite }}
-              </div>
-
-              <div class="mini-subtitle">40h - 44h</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- CARDS -->
-
-    <v-row dense class="mt-3">
-      <v-col
-        v-for="item in data.rutasPorConductor"
-        :key="item.conductor"
-        cols="12"
-        sm="6"
-        md="4"
-        lg="3"
-      >
-        <v-card class="personal-card" elevation="4" rounded="xl">
-          <!-- TOP -->
-
-          <div class="d-flex justify-space-between align-start">
-            <div class="d-flex ga-2 align-center">
-              <div class="avatar-box">
-                <v-icon size="16"> mdi-account </v-icon>
-              </div>
-
-              <div>
-                <!-- TOOLTIP -->
-
-                <v-tooltip location="top">
-                  <template #activator="{ props }">
-                    <div v-bind="props" class="nombre">
-                      {{ item.conductor }}
-                    </div>
-                  </template>
-
-                  <span>
-                    {{ item.conductor }}
-                  </span>
-                </v-tooltip>
-
-                <div class="detalle">{{ item.total }} rutas</div>
-              </div>
-            </div>
-
-            <v-chip :color="colorHoras(item.horas)" size="x-small" variant="flat">
-              {{ estadoHoras(item.horas) }}
-            </v-chip>
-          </div>
-
-          <!-- INFO -->
-
-          <div class="info-grid mt-3">
-            <!-- HORAS -->
-
-            <div class="info-box">
-              <div class="info-label">Horas</div>
-
-              <div
-                :class="[
-                  'info-value',
-
-                  item.horas > 44 ? 'text-red' : item.horas >= 40 ? 'text-orange' : 'text-green',
-                ]"
-              >
-                {{ item.horas }} h
-              </div>
-            </div>
-
-            <!-- EXTRAS -->
-
-            <div class="info-box">
-              <div class="info-label">Extras</div>
-
-              <div class="info-value">{{ item.extras }} h</div>
-            </div>
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <PersonalDetalleModal
+      v-model="mostrarHorasExtra"
+      titulo="Trabajadores con horas extras"
+      :trabajadores="data.detalleHorasExtra || []"
+      tipo="extras"
+    />
   </v-container>
 </template>
 

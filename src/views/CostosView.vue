@@ -13,6 +13,7 @@ type CostoRuta = {
   calibrada: number
   parqueadero: number
   taxis: number
+  estado: string
 }
 
 const costos = ref<CostoRuta[]>([])
@@ -36,7 +37,6 @@ async function cargar() {
   const res = await fetch('http://localhost:3333/api/v1/dashboard/costos-detalle')
 
   const data = await res.json()
-
   costos.value = Array.isArray(data)
     ? data.map((i: any) => ({
         fecha: i.fecha ?? '',
@@ -50,6 +50,16 @@ async function cargar() {
         calibrada: Number(i.calibrada) || 0,
         parqueadero: Number(i.parqueadero) || 0,
         taxis: Number(i.taxis) || 0,
+
+        estado:
+          (Number(i.combustible) || 0) +
+            (Number(i.peajes) || 0) +
+            (Number(i.calibrada) || 0) +
+            (Number(i.parqueadero) || 0) +
+            (Number(i.taxis) || 0) >
+          (Number(i.tarifa) || 0)
+            ? 'Sobrecosto'
+            : 'Rentable',
       }))
     : []
 }
@@ -140,6 +150,23 @@ const sobreCostoTotal = computed(() => {
   }, 0)
 })
 
+const topRutasSobrecosto = computed(() => {
+  return [...rutasConPerdida.value]
+    .map((ruta) => ({
+      ...ruta,
+
+      perdida:
+        ruta.combustible +
+        ruta.peajes +
+        ruta.calibrada +
+        ruta.parqueadero +
+        ruta.taxis -
+        ruta.tarifa,
+    }))
+    .sort((a, b) => b.perdida - a.perdida)
+    .slice(0, 5)
+})
+
 /* =========================
    ANALÍTICAS
 ========================= */
@@ -189,6 +216,15 @@ function limpiarFiltros() {
   }
 }
 
+const tieneSobrecosto = (item: CostoRuta) => {
+  const total = item.combustible + item.peajes + item.calibrada + item.parqueadero + item.taxis
+
+  return total > item.tarifa
+}
+const mayorPerdida = computed(() => {
+  return topRutasSobrecosto.value.length > 0 ? topRutasSobrecosto.value[0]!.perdida : 1
+})
+
 /* =========================
    HEADERS
 ========================= */
@@ -204,6 +240,7 @@ const headers = [
   { title: 'Parqueadero', key: 'parqueadero' },
   { title: 'Taxis', key: 'taxis' },
   { title: 'Total', key: 'total' },
+  { title: 'Estado', key: 'estado' },
 ]
 
 const headersPerdidas = [
@@ -336,37 +373,33 @@ const headersPerdidas = [
     </v-row>
 
     <!-- ALERTAS -->
-    <v-col cols="12" md="4">
-      <v-alert
-        :type="rutasConPerdida.length > 0 ? 'error' : 'success'"
-        variant="tonal"
-        border="start"
-        rounded="lg"
-        density="compact"
-        class="text-caption cursor-pointer"
-        @click="dialogPerdidas = true"
-      >
-        <template v-if="rutasConPerdida.length > 0">
-          <div>
+    <v-row class="mb-2">
+      <v-col cols="auto">
+        <v-alert
+          :type="rutasConPerdida.length > 0 ? 'error' : 'success'"
+          variant="tonal"
+          density="compact"
+          rounded="lg"
+          class="cursor-pointer"
+          @click="dialogPerdidas = true"
+        >
+          <div class="font-weight-medium">
             🚨 {{ rutasConPerdida.length }}
             rutas superaron la tarifa asignada
           </div>
 
-          <div class="text-caption text-grey-darken-1 mt-1">Dar clic para ver más detalles</div>
-        </template>
+          <div style="font-size: 11px; opacity: 0.7">Dar clic para ver más detalles</div>
+        </v-alert>
+      </v-col>
 
-        <template v-else>
-          <div>✅ Ninguna ruta superó la tarifa asignada</div>
-        </template>
-      </v-alert>
-    </v-col>
-
-    <v-col cols="12" md="4">
-      <v-alert type="success" variant="tonal" border="start" rounded="lg" density="compact">
-        💰 Costo promedio: ${{ money(Math.round(costoPorKm)) }}
-        por km
-      </v-alert>
-    </v-col>
+      <v-col cols="auto">
+        <v-alert type="success" variant="tonal" density="compact" rounded="lg">
+          💰 Costo promedio:
+          <strong>${{ money(costoPorKm) }}</strong>
+          por km
+        </v-alert>
+      </v-col>
+    </v-row>
     <!-- TABLA -->
     <v-card class="glass-card pa-2" rounded="xl" elevation="8">
       <v-data-table
@@ -378,7 +411,7 @@ const headersPerdidas = [
         class="tabla-costos"
       >
         <template #item.placa="{ item }">
-          <v-chip color="primary" variant="tonal" size="small">
+          <v-chip color="primary" variant="flat" size="small">
             {{ item.placa }}
           </v-chip>
         </template>
@@ -388,24 +421,31 @@ const headersPerdidas = [
         </template>
 
         <template #item.combustible="{ item }">
-          <v-chip color="orange" variant="tonal" size="small">
-            ${{ money(item.combustible) }}
-          </v-chip>
+          <v-chip color="gray" variant="flat" size="small"> ${{ money(item.combustible) }} </v-chip>
         </template>
 
         <template #item.tarifa="{ item }">
-          <v-chip color="primary" variant="tonal" size="small"> ${{ money(item.tarifa) }} </v-chip>
+          <v-chip color="orange" variant="tonal" size="small"> ${{ money(item.tarifa) }} </v-chip>
         </template>
 
         <template #item.peajes="{ item }">
-          <v-chip color="purple" variant="tonal" size="small"> ${{ money(item.peajes) }} </v-chip>
+          <v-chip color="gray" variant="tonal" size="small"> ${{ money(item.peajes) }} </v-chip>
         </template>
-
         <template #item.total="{ item }">
-          <v-chip color="green" variant="tonal" size="small">
+          <v-chip color="yellow" variant="flat" size="small">
             ${{
               money(item.combustible + item.peajes + item.calibrada + item.parqueadero + item.taxis)
             }}
+          </v-chip>
+        </template>
+
+        <template #item.estado="{ item }">
+          <v-chip
+            :color="item.estado === 'Sobrecosto' ? 'red' : 'success'"
+            variant="flat"
+            size="small"
+          >
+            {{ item.estado }}
           </v-chip>
         </template>
       </v-data-table>
@@ -414,12 +454,12 @@ const headersPerdidas = [
     <!-- RANKINGS -->
     <v-row class="mt-5">
       <!-- VEHÍCULOS -->
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="4">
         <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 font-weight-bold">Vehículos más costosos</h3>
+            <h3 class="text-subtitle-1 text-red font-weight-bold">Vehículos más costosos</h3>
 
-            <v-chip color="red" variant="tonal" size="small"> Top 5 </v-chip>
+            <v-chip color="red" variant="flat" size="small"> Top 5 </v-chip>
           </div>
 
           <div v-for="(v, index) in rankingVehiculos.slice(0, 5)" :key="v.placa" class="mb-4">
@@ -434,40 +474,57 @@ const headersPerdidas = [
                 </span>
               </div>
 
-              <span class="text-body-2"> ${{ money(v.total) }} </span>
+              <span class="text-body-2 text-red font-weight-bold"> ${{ money(v.total) }} </span>
             </div>
-
-            <v-progress-linear
-              :model-value="(v.total / maxCostoVehiculo) * 100"
-              height="10"
-              rounded
-              color="red"
-              bg-color="#2b1d1d"
-            />
           </div>
         </v-card>
       </v-col>
-
-      <!-- RUTAS -->
-      <v-col cols="12" md="6">
+      <v-col cols="12" md="4">
         <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 font-weight-bold">Rutas más costosas</h3>
+            <h3 class="text-subtitle-1 text-orange font-weight-bold">Rutas con mayor sobrecosto</h3>
 
-            <v-chip color="orange" variant="tonal" size="small"> Top 5 </v-chip>
+            <v-chip color="orange" variant="flat" size="small"> Top 5 </v-chip>
           </div>
 
-          <div v-for="(r, index) in rankingRutas.slice(0, 5)" :key="r.ruta" class="mb-3">
+          <div v-for="(ruta, index) in topRutasSobrecosto" :key="index" class="mb-4">
             <div class="d-flex justify-space-between align-center">
               <div class="d-flex align-center ga-2">
                 <v-avatar size="22" color="orange">
                   {{ index + 1 }}
                 </v-avatar>
 
+                <span class="font-weight-bold text-body-2"> Ruta {{ ruta.ruta }} </span>
+              </div>
+
+              <v-chip color="orange" variant="flat" size="small">
+                ${{ money(ruta.perdida) }}
+              </v-chip>
+            </div>
+          </div>
+        </v-card>
+      </v-col>
+
+      <!-- RUTAS -->
+      <v-col cols="12" md="4">
+        <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
+          <div class="d-flex align-center justify-space-between mb-4">
+            <h3 class="text-subtitle-1 text-yellow font-weight-bold">Rutas más costosas</h3>
+
+            <v-chip color="yellow" variant="flat" size="small"> Top 5 </v-chip>
+          </div>
+
+          <div v-for="(r, index) in rankingRutas.slice(0, 5)" :key="r.ruta" class="mb-3">
+            <div class="d-flex justify-space-between align-center">
+              <div class="d-flex align-center ga-2">
+                <v-avatar size="22" color="yellow">
+                  {{ index + 1 }}
+                </v-avatar>
+
                 <span class="font-weight-bold text-body-2"> Ruta {{ r.ruta }} </span>
               </div>
 
-              <v-chip color="orange" variant="tonal" size="small"> ${{ money(r.total) }} </v-chip>
+              <v-chip color="yellow" variant="tonal" size="small"> ${{ money(r.total) }} </v-chip>
             </div>
           </div>
         </v-card>
