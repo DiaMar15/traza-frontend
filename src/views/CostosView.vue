@@ -258,7 +258,7 @@ const headersPerdidas = [
     <h2 class="text-h5 font-weight-bold mb-5">Costos por Ruta</h2>
 
     <!-- FILTROS -->
-    <v-card class="pa-4 mb-4 glass-card" rounded="xl" elevation="8">
+    <v-card class="pa-4 mb-4" rounded="xl" elevation="8">
       <v-row>
         <v-col cols="12" md="3">
           <v-text-field
@@ -417,19 +417,23 @@ const headersPerdidas = [
         </template>
 
         <template #item.ruta="{ item }">
-          <v-chip color="grey" variant="outlined" size="small"> Ruta {{ item.ruta }} </v-chip>
+          <v-chip color="brown" variant="flat" size="small"> Ruta {{ item.ruta }} </v-chip>
         </template>
 
         <template #item.combustible="{ item }">
-          <v-chip color="gray" variant="flat" size="small"> ${{ money(item.combustible) }} </v-chip>
+          <v-chip color="teal lighten-1" variant="flat" size="small">
+            ${{ money(item.combustible) }}
+          </v-chip>
         </template>
 
         <template #item.tarifa="{ item }">
-          <v-chip color="orange" variant="tonal" size="small"> ${{ money(item.tarifa) }} </v-chip>
+          <v-chip color="orange" variant="flat" size="small"> ${{ money(item.tarifa) }} </v-chip>
         </template>
 
         <template #item.peajes="{ item }">
-          <v-chip color="gray" variant="tonal" size="small"> ${{ money(item.peajes) }} </v-chip>
+          <v-chip color="blue-grey darken-2" variant="flat" size="small">
+            ${{ money(item.peajes) }}
+          </v-chip>
         </template>
         <template #item.total="{ item }">
           <v-chip color="yellow" variant="flat" size="small">
@@ -455,49 +459,55 @@ const headersPerdidas = [
     <v-row class="mt-5">
       <!-- VEHÍCULOS -->
       <v-col cols="12" md="4">
-        <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
+        <v-card class="pa-4 top-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 text-red font-weight-bold">Vehículos más costosos</h3>
+            <h3 class="text-subtitle-1 font-weight-bold text-white">Vehículos más costosos</h3>
 
-            <v-chip color="red" variant="flat" size="small"> Top 5 </v-chip>
+            <v-chip color="yellow" variant="flat" size="small"> Top 5 </v-chip>
           </div>
 
           <div v-for="(v, index) in rankingVehiculos.slice(0, 5)" :key="v.placa" class="mb-4">
-            <div class="d-flex justify-space-between mb-1">
+            <div class="d-flex justify-space-between align-center">
               <div class="d-flex align-center ga-2">
-                <v-avatar size="22" color="red">
-                  {{ index + 1 }}
+                <v-avatar size="22" color="white">
+                  <span class="text-primary font-weight-bold">
+                    {{ index + 1 }}
+                  </span>
                 </v-avatar>
 
-                <span class="font-weight-bold text-body-2">
+                <span class="text-body-2 text-white font-weight-bold">
                   {{ v.placa }}
                 </span>
               </div>
 
-              <span class="text-body-2 text-red font-weight-bold"> ${{ money(v.total) }} </span>
+              <v-chip color="yellow" variant="flat" size="small"> ${{ money(v.total) }} </v-chip>
             </div>
           </div>
         </v-card>
       </v-col>
-      <v-col cols="12" md="4">
-        <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
-          <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 text-orange font-weight-bold">Rutas con mayor sobrecosto</h3>
 
-            <v-chip color="orange" variant="flat" size="small"> Top 5 </v-chip>
+      <!-- SOBRECOSTO -->
+      <v-col cols="12" md="4">
+        <v-card class="pa-4 top-card" rounded="xl" elevation="8">
+          <div class="d-flex align-center justify-space-between mb-4">
+            <h3 class="text-subtitle-1 font-weight-bold text-white">Rutas con mayor sobrecosto</h3>
+
+            <v-chip color="yellow" variant="flat" size="small"> Top 5 </v-chip>
           </div>
 
           <div v-for="(ruta, index) in topRutasSobrecosto" :key="index" class="mb-4">
             <div class="d-flex justify-space-between align-center">
               <div class="d-flex align-center ga-2">
-                <v-avatar size="22" color="orange">
-                  {{ index + 1 }}
+                <v-avatar size="22" color="white">
+                  <span class="text-primary font-weight-bold">
+                    {{ index + 1 }}
+                  </span>
                 </v-avatar>
 
-                <span class="font-weight-bold text-body-2"> Ruta {{ ruta.ruta }} </span>
+                <span class="text-body-2 text-white font-weight-bold"> Ruta {{ ruta.ruta }} </span>
               </div>
 
-              <v-chip color="orange" variant="flat" size="small">
+              <v-chip color="yellow" variant="flat" size="small">
                 ${{ money(ruta.perdida) }}
               </v-chip>
             </div>
@@ -507,24 +517,26 @@ const headersPerdidas = [
 
       <!-- RUTAS -->
       <v-col cols="12" md="4">
-        <v-card class="pa-4 glass-card" rounded="xl" elevation="8">
+        <v-card class="pa-4 top-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
-            <h3 class="text-subtitle-1 text-yellow font-weight-bold">Rutas más costosas</h3>
+            <h3 class="text-subtitle-1 font-weight-bold text-white">Rutas más costosas</h3>
 
             <v-chip color="yellow" variant="flat" size="small"> Top 5 </v-chip>
           </div>
 
-          <div v-for="(r, index) in rankingRutas.slice(0, 5)" :key="r.ruta" class="mb-3">
+          <div v-for="(r, index) in rankingRutas.slice(0, 5)" :key="r.ruta" class="mb-4">
             <div class="d-flex justify-space-between align-center">
               <div class="d-flex align-center ga-2">
-                <v-avatar size="22" color="yellow">
-                  {{ index + 1 }}
+                <v-avatar size="22" color="white">
+                  <span class="text-primary font-weight-bold">
+                    {{ index + 1 }}
+                  </span>
                 </v-avatar>
 
-                <span class="font-weight-bold text-body-2"> Ruta {{ r.ruta }} </span>
+                <span class="text-body-2 text-white font-weight-bold"> Ruta {{ r.ruta }} </span>
               </div>
 
-              <v-chip color="yellow" variant="tonal" size="small"> ${{ money(r.total) }} </v-chip>
+              <v-chip color="yellow" variant="flat" size="small"> ${{ money(r.total) }} </v-chip>
             </div>
           </div>
         </v-card>
@@ -555,10 +567,12 @@ const headersPerdidas = [
           >
             <template #item.tarifa="{ item }"> ${{ money(item.tarifa) }} </template>
 
-            <template #item.costo="{ item }"> ${{ money(item.costo) }} </template>
+            <template #item.costo="{ item }">
+              <v-chip color="lime accent-2" variant="flat">${{ money(item.costo) }} </v-chip>
+            </template>
 
             <template #item.perdida="{ item }">
-              <v-chip color="red" variant="tonal"> ${{ money(item.perdida) }} </v-chip>
+              <v-chip color="red" variant="flat"> ${{ money(item.perdida) }} </v-chip>
             </template>
           </v-data-table>
         </v-card-text>
@@ -652,7 +666,7 @@ const headersPerdidas = [
 
 /* TABLA */
 .tabla-costos :deep(thead) {
-  background: #1f2937;
+  background: #0228ff;
 }
 
 .tabla-costos :deep(thead th) {
@@ -667,5 +681,15 @@ const headersPerdidas = [
 
 .tabla-costos :deep(tbody tr:hover) {
   background: rgba(255, 255, 255, 0.05);
+}
+
+.filtros-card {
+  background: rgb(121, 121, 121) !important;
+}
+
+.top-card {
+  background: #0260ca !important;
+
+  color: white;
 }
 </style>

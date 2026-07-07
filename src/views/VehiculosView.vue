@@ -397,6 +397,7 @@ onMounted(cargarVehiculos)
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
             style="width: 260px"
+            e
           />
 
           <v-select
@@ -416,7 +417,7 @@ onMounted(cargarVehiculos)
             density="comfortable"
           />
 
-          <v-btn color="orange" prepend-icon="mdi-sync" @click="sincronizarVehiculos">
+          <v-btn color="green" prepend-icon="mdi-sync" @click="sincronizarVehiculos">
             Sincronizar
           </v-btn>
 
@@ -424,7 +425,12 @@ onMounted(cargarVehiculos)
         </div>
       </v-card-title>
 
-      <v-data-table :headers="headers" :items="vehiculosFiltrados" :loading="loading">
+      <v-data-table
+        class="tabla-vehiculos"
+        :headers="headers"
+        :items="vehiculosFiltrados"
+        :loading="loading"
+      >
         <template #item.placa="{ item }">
           <strong>
             {{ item.placa }}
@@ -460,7 +466,11 @@ onMounted(cargarVehiculos)
         </template>
 
         <template #item.estado="{ item }">
-          <v-chip :color="item.estado === 'RETIRADO' ? 'error' : 'success'" size="small">
+          <v-chip
+            :color="item.estado === 'RETIRADO' ? 'error' : 'success'"
+            variant="flat"
+            size="small"
+          >
             {{ item.estado }}
           </v-chip>
         </template>
@@ -533,3 +543,14 @@ onMounted(cargarVehiculos)
     </v-dialog>
   </v-container>
 </template>
+<style scoped>
+.tabla-vehiculos :deep(thead th) {
+  background-color: #2563eb !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.tabla-vehiculos :deep(thead tr) {
+  background-color: #2563eb !important;
+}
+</style>

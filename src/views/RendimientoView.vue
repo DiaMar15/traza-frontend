@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
-/* CHART JS */
 import {
   Chart as ChartJS,
   Title,
@@ -13,8 +12,34 @@ import {
 } from 'chart.js'
 
 import { Bar } from 'vue-chartjs'
+import ChartDataLabels from 'chartjs-plugin-datalabels'
 
-ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
+import { obtenerSemanas } from '@/services/dashboardService'
+import RendimientoFiltros from '@/components/rendimiento/RendimientoFiltros.vue'
+import RendimientoHeader from '@/components/rendimiento/RendimientoHeader.vue'
+import RendimientoKPIs from '@/components/rendimiento/RendimientoKPIs.vue'
+import RendimientoAlertas from '@/components/rendimiento/RendimientoAlertas.vue'
+import RendimientoRankings from '@/components/rendimiento/RendimientoRankings.vue'
+import RendimientoVehiculos from '@/components/rendimiento/RendimientoVehiculos.vue'
+import RendimientoCEDI from '@/components/rendimiento/RendimientoCEDI.vue'
+import RendimientoOperativo from '@/components/rendimiento/RendimientoOperativo.vue'
+
+import {
+  obtenerRendimiento,
+  obtenerRendimientoVehiculos,
+  obtenerKmPorZona,
+  obtenerVehiculoMenorKilometraje,
+  obtenerTiempoCediAmVehiculos,
+  obtenerTiempoCediPmVehiculos,
+  obtenerTiempoCediAmZona,
+  obtenerTiempoCediPmZona,
+  obtenerHorasExtraZona,
+} from '@/services/rendimientoService'
+
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ChartDataLabels)
+/* ==========================
+   TYPES
+========================== */
 
 type Vehiculo = {
   placa: string
@@ -27,54 +52,291 @@ type Vehiculo = {
   efectividad: number
 }
 
-const vehiculos = ref<Vehiculo[]>([])
-
-async function cargar() {
-  const res = await fetch('http://localhost:3333/api/v1/dashboard/rendimiento-vehiculos')
-
-  vehiculos.value = await res.json()
+type Zona = {
+  zona: string
+  total: number
 }
 
-onMounted(cargar)
+type TiempoZona = {
+  zona: string
+  tiempo: number
+}
 
-/* =========================
+type TiempoVehiculo = {
+  placa: string
+  tiempo: number
+}
+
+type HorasExtraZona = {
+  zona: string
+  horasExtra: number
+}
+
+/* ==========================
+   DATA
+========================== */
+
+const loading = ref(false)
+
+const rendimiento = ref<any>({})
+
+const vehiculos = ref<Vehiculo[]>([])
+
+const zonas = ref<Zona[]>([])
+
+const vehiculoMenorKm = ref<any>(null)
+
+const tiempoCediAmVehiculos = ref<TiempoVehiculo[]>([])
+
+const tiempoCediPmVehiculos = ref<TiempoVehiculo[]>([])
+
+const tiempoCediAmZona = ref<TiempoZona[]>([])
+
+const tiempoCediPmZona = ref<TiempoZona[]>([])
+
+const horasExtraZona = ref<HorasExtraZona[]>([])
+
+/* ==========================
+   FILTROS
+========================== */
+
+const periodo = ref<'diario' | 'semanal' | 'mensual'>('semanal')
+
+const dia = ref('')
+
+const semana = ref<number | null>(null)
+
+const mes = ref('')
+
+const semanas = ref<number[]>([])
+
+const meses = ref([
+  'Enero',
+  'Febrero',
+  'Marzo',
+  'Abril',
+  'Mayo',
+  'Junio',
+  'Julio',
+  'Agosto',
+  'Septiembre',
+  'Octubre',
+  'Noviembre',
+  'Diciembre',
+])
+
+/* ==========================
+   CARGAR SEMANAS
+========================== */
+
+async function cargarSemanas() {
+  try {
+    const data = await obtenerSemanas()
+
+    semanas.value = [...data.semanas].sort((a, b) => a - b)
+
+    if (!semana.value) {
+      semana.value = data.semana
+    }
+  } catch (error) {
+    console.error(error)
+  }
+}
+/* ==========================
+   CARGAR INFORMACIÓN
+========================== */
+
+async function cargarRendimiento() {
+  loading.value = true
+
+  try {
+    const filtros = {
+      dia: periodo.value === 'diario' ? dia.value : undefined,
+
+      semana: periodo.value === 'semanal' ? (semana.value ?? undefined) : undefined,
+
+      mes: periodo.value === 'mensual' ? mes.value : undefined,
+    }
+
+    const [
+      rendimientoData,
+      vehiculosData,
+      zonasData,
+      menorKmData,
+      cediAmVehiculosData,
+      cediPmVehiculosData,
+      cediAmZonaData,
+      cediPmZonaData,
+      horasExtraZonaData,
+    ] = await Promise.all([
+      obtenerRendimiento(filtros),
+
+      obtenerRendimientoVehiculos(filtros),
+
+      obtenerKmPorZona(filtros),
+
+      obtenerVehiculoMenorKilometraje(filtros),
+
+      obtenerTiempoCediAmVehiculos(filtros),
+
+      obtenerTiempoCediPmVehiculos(filtros),
+
+      obtenerTiempoCediAmZona(filtros),
+
+      obtenerTiempoCediPmZona(filtros),
+
+      obtenerHorasExtraZona(filtros),
+    ])
+
+    console.log(horasExtraZonaData)
+    rendimiento.value = rendimientoData
+
+    vehiculos.value = vehiculosData
+
+    zonas.value = zonasData
+
+    vehiculoMenorKm.value = menorKmData
+
+    tiempoCediAmVehiculos.value = cediAmVehiculosData
+
+    tiempoCediPmVehiculos.value = cediPmVehiculosData
+
+    tiempoCediAmZona.value = cediAmZonaData
+
+    tiempoCediPmZona.value = cediPmZonaData
+
+    horasExtraZona.value = horasExtraZonaData
+  } catch (error) {
+    console.error(error)
+  } finally {
+    loading.value = false
+  }
+}
+
+/* ==========================
+   INICIALIZACIÓN
+========================== */
+
+onMounted(async () => {
+  dia.value = new Date().toISOString().slice(0, 10)
+
+  await cargarSemanas()
+
+  await cargarRendimiento()
+})
+
+/* ==========================
+   WATCHS
+========================== */
+
+watch(periodo, () => {
+  if (periodo.value === 'diario' && !dia.value) {
+    dia.value = new Date().toISOString().slice(0, 10)
+  }
+
+  if (periodo.value === 'mensual' && !mes.value) {
+    mes.value = meses.value[new Date().getMonth()] ?? ''
+  }
+
+  cargarRendimiento()
+})
+
+watch(dia, (nuevoDia) => {
+  console.log('Fecha enviada:', nuevoDia)
+
+  if (periodo.value === 'diario') {
+    cargarRendimiento()
+  }
+})
+
+watch(semana, (nuevaSemana) => {
+  if (periodo.value === 'semanal' && nuevaSemana !== null) {
+    cargarRendimiento()
+  }
+})
+
+watch(mes, (nuevoMes) => {
+  if (periodo.value === 'mensual' && nuevoMes) {
+    cargarRendimiento()
+  }
+})
+
+/* ==========================
    MÉTRICAS
-========================= */
+========================== */
 
-const totalKm = computed(() => vehiculos.value.reduce((a, b) => a + b.km, 0))
+const zonaMayorKm = computed(() => {
+  return [...zonas.value].sort((a, b) => b.total - a.total)[0] ?? null
+})
 
-const totalRutas = computed(() => vehiculos.value.reduce((a, b) => a + b.rutas, 0))
+const totalKm = computed(() => {
+  return rendimiento.value?.totalKm ?? 0
+})
 
-const promedioTiempo = computed(() =>
-  vehiculos.value.length
-    ? Math.round(vehiculos.value.reduce((a, b) => a + b.tiempo, 0) / vehiculos.value.length)
-    : 0,
-)
+const totalRutas = computed(() => {
+  return rendimiento.value?.totalRutas ?? 0
+})
 
-const vehiculoMasKm = computed(() => [...vehiculos.value].sort((a, b) => b.km - a.km)[0])
+const efectividad = computed(() => {
+  return rendimiento.value?.efectividad ?? 0
+})
 
-const vehiculoMasLento = computed(() => [...vehiculos.value].sort((a, b) => b.tiempo - a.tiempo)[0])
+const promedioTiempo = computed(() => {
+  if (!vehiculos.value.length) {
+    return 0
+  }
 
-const vehiculoMayorCarga = computed(() => [...vehiculos.value].sort((a, b) => b.peso - a.peso)[0])
+  const total = vehiculos.value.reduce((acumulado, vehiculo) => {
+    return acumulado + vehiculo.tiempo
+  }, 0)
 
-/* =========================
-   TOP 10 VEHÍCULOS
-========================= */
+  return Math.round(total / vehiculos.value.length)
+})
 
-const topVehiculos = computed(() => [...vehiculos.value].sort((a, b) => b.km - a.km).slice(0, 10))
+const vehiculoMasKm = computed(() => {
+  return [...vehiculos.value].sort((a, b) => b.km - a.km)[0] ?? null
+})
 
-/* =========================
+const vehiculoMenosKm = computed(() => {
+  return [...vehiculos.value].sort((a, b) => a.km - b.km)[0] ?? null
+})
+
+const vehiculoMasLento = computed(() => {
+  return [...vehiculos.value].sort((a, b) => b.tiempo - a.tiempo)[0] ?? null
+})
+
+const vehiculoMayorCarga = computed(() => {
+  return [...vehiculos.value].sort((a, b) => b.peso - a.peso)[0] ?? null
+})
+
+/* ==========================
+   TOP VEHÍCULOS
+========================== */
+
+const topVehiculos = computed(() => {
+  return [...vehiculos.value].sort((a, b) => b.km - a.km).slice(0, 13)
+})
+
+/* ==========================
+   TOP ZONAS
+========================== */
+
+const topZonas = computed(() => {
+  return [...zonas.value].sort((a, b) => b.total - a.total).slice(0, 13)
+})
+
+/* ==========================
    GRÁFICA
-========================= */
+========================== */
 
-const chartData = computed(() => ({
-  labels: topVehiculos.value.map((v) => v.placa),
+const vehiculosChartData = computed(() => ({
+  labels: topVehiculos.value.map((vehiculo) => vehiculo.placa),
 
   datasets: [
     {
       label: 'Kilómetros',
 
-      data: topVehiculos.value.map((v) => v.km),
+      data: topVehiculos.value.map((vehiculo) => vehiculo.km),
 
       backgroundColor: [
         '#42A5F5',
@@ -90,6 +352,40 @@ const chartData = computed(() => ({
       ],
 
       borderRadius: 8,
+      barThickness: 18,
+      maxBarThickness: 22,
+    },
+  ],
+}))
+
+const zonasChartData = computed(() => ({
+  labels: topZonas.value.map((zona) => zona.zona),
+
+  datasets: [
+    {
+      label: 'Kilómetros',
+
+      data: topZonas.value.map((zona) => zona.total),
+
+      backgroundColor: [
+        '#42A5F5',
+        '#66BB6A',
+        '#FFA726',
+        '#AB47BC',
+        '#26C6DA',
+        '#EF5350',
+        '#5C6BC0',
+        '#9CCC65',
+        '#FF7043',
+        '#8D6E63',
+        '#26A69A',
+        '#EC407A',
+        '#7E57C2',
+      ],
+
+      borderRadius: 8,
+      barThickness: 18,
+      maxBarThickness: 22,
     },
   ],
 }))
@@ -103,14 +399,33 @@ const chartOptions = {
 
   plugins: {
     legend: {
-      labels: {
-        color: '#FFFFFF',
+      display: false,
+    },
+
+    datalabels: {
+      color: '#000000',
+
+      anchor: 'center',
+
+      align: 'left',
+
+      offset: -8,
+
+      formatter(value: number) {
+        return `${value} km`
+      },
+
+      font: {
+        weight: 'bold',
+        size: 11,
       },
     },
   },
 
   scales: {
     x: {
+      suggestedMax: Math.max(...topZonas.value.map((z) => z.total)) * 1.15,
+
       ticks: {
         color: '#FFFFFF',
       },
@@ -123,6 +438,7 @@ const chartOptions = {
     y: {
       ticks: {
         color: '#FFFFFF',
+        padding: 8,
       },
 
       grid: {
@@ -132,179 +448,158 @@ const chartOptions = {
   },
 }
 
-/* =========================
-   COLORES
-========================= */
+function colorEfectividad(valor: number) {
+  if (valor >= 90) {
+    return 'green'
+  }
 
-function colorEfectividad(val: number) {
-  if (val >= 90) return 'green'
-  if (val >= 70) return 'orange'
-
-  return 'red'
-}
-
-function colorTiempo(val: number) {
-  if (val <= 450) return 'green'
-  if (val <= 520) return 'orange'
+  if (valor >= 70) {
+    return 'orange'
+  }
 
   return 'red'
 }
 
-/* =========================
+function colorTiempo(valor: number) {
+  if (valor <= 450) {
+    return 'green'
+  }
+
+  if (valor <= 520) {
+    return 'orange'
+  }
+
+  return 'red'
+}
+
+/* ==========================
    TABLA
-========================= */
+========================== */
 
 const headers = [
-  { title: 'Vehículo', key: 'placa' },
-  { title: 'Rutas', key: 'rutas' },
-  { title: 'Km', key: 'km' },
-  { title: 'Tiempo (min)', key: 'tiempo' },
-  { title: 'Clientes', key: 'clientes' },
-  { title: 'Peso', key: 'peso' },
-  { title: 'Volumen', key: 'volumen' },
-  { title: 'Efectividad', key: 'efectividad' },
+  {
+    title: 'Vehículo',
+    key: 'placa',
+  },
+
+  {
+    title: 'Rutas',
+    key: 'rutas',
+  },
+
+  {
+    title: 'Km',
+    key: 'km',
+  },
+
+  {
+    title: 'Tiempo (min)',
+    key: 'tiempo',
+  },
+
+  {
+    title: 'Clientes',
+    key: 'clientes',
+  },
+
+  {
+    title: 'Peso',
+    key: 'peso',
+  },
+
+  {
+    title: 'Volumen',
+    key: 'volumen',
+  },
+
+  {
+    title: 'Efectividad',
+    key: 'efectividad',
+  },
 ]
 </script>
 
 <template>
   <v-container>
-    <h2 class="text-h5 font-weight-bold mb-6">Rendimiento Operativo</h2>
+    <!-- ==========================================
+         HEADER
+    ========================================== -->
 
-    <!-- CARDS -->
-    <v-row>
-      <v-col cols="12" md="4">
-        <v-card class="pa-4 card-blue">
-          <div>Total Km</div>
+    <RendimientoHeader
+      :periodo="periodo"
+      :dia="dia"
+      :semana="semana"
+      :mes="mes"
+      :total-rutas="totalRutas"
+      :total-vehiculos="vehiculos.length"
+    />
 
-          <div class="text-h4">
-            {{ totalKm }}
-          </div>
-        </v-card>
-      </v-col>
+    <!-- ==========================================
+         FILTROS
+    ========================================== -->
 
-      <v-col cols="12" md="4">
-        <v-card class="pa-4 card-purple">
-          <div>Total Rutas</div>
+    <RendimientoFiltros
+      v-model:periodo="periodo"
+      v-model:dia="dia"
+      v-model:semana="semana"
+      v-model:mes="mes"
+      :semanas="semanas"
+      :meses="meses"
+    />
 
-          <div class="text-h4">
-            {{ totalRutas }}
-          </div>
-        </v-card>
-      </v-col>
+    <!-- ==========================================
+         KPIs
+    ========================================== -->
 
-      <v-col cols="12" md="4">
-        <v-card class="pa-4 card-dark">
-          <div>Tiempo Promedio</div>
+    <RendimientoKPIs
+      :total-km="totalKm"
+      :total-rutas="totalRutas"
+      :promedio-tiempo="promedioTiempo"
+      :efectividad="efectividad"
+    />
 
-          <div class="text-h4">{{ promedioTiempo }} min</div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <!-- ==========================================
+         ALERTAS DEL PERÍODO
+    ========================================== -->
 
-    <!-- INSIGHTS -->
-    <v-row class="mt-4">
-      <v-col cols="12" md="6">
-        <v-card class="pa-4">
-          <strong>🚛 Vehículo con más km</strong>
+    <RendimientoAlertas
+      :vehiculo-mayor-km="vehiculoMasKm"
+      :vehiculo-menor-km="vehiculoMenorKm"
+      :zona-mayor-km="zonaMayorKm"
+    />
 
-          <div v-if="vehiculoMasKm">
-            {{ vehiculoMasKm.placa }}
-            -
-            {{ vehiculoMasKm.km }} km
-          </div>
-        </v-card>
-      </v-col>
+    <RendimientoRankings
+      :vehiculos-chart-data="vehiculosChartData"
+      :zonas-chart-data="zonasChartData"
+      :chart-options="chartOptions"
+    />
 
-      <v-col cols="12" md="6">
-        <v-card class="pa-4">
-          <strong>⚠ Vehículo más lento</strong>
+    <!-- ==========================================
+         RENDIMIENTO POR VEHÍCULO
+    ========================================== -->
 
-          <div v-if="vehiculoMasLento">
-            {{ vehiculoMasLento.placa }}
-            -
-            {{ vehiculoMasLento.tiempo }} min
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
+    <RendimientoVehiculos
+      :headers="headers"
+      :vehiculos="vehiculos"
+      :color-tiempo="colorTiempo"
+      :color-efectividad="colorEfectividad"
+    />
 
-    <!-- ALERTAS / INSIGHTS OPERATIVOS -->
-    <v-row class="mt-4">
-      <!-- MAYOR RENDIMIENTO -->
-      <v-col cols="12" md="4">
-        <v-alert type="success" variant="tonal" border="start">
-          ✅
-          {{ vehiculoMasKm?.placa }}
-          lidera el rendimiento con
-          {{ vehiculoMasKm?.km }} km recorridos
-        </v-alert>
-      </v-col>
+    <RendimientoOperativo :zonas="zonas" :horas-extra-zona="horasExtraZona" />
 
-      <!-- MAYOR TIEMPO -->
-      <v-col cols="12" md="4">
-        <v-alert type="warning" variant="tonal" border="start">
-          ⚠
-          {{ vehiculoMasLento?.placa }}
-          supera el tiempo ideal con
-          {{ vehiculoMasLento?.tiempo }} min
-        </v-alert>
-      </v-col>
-
-      <!-- MAYOR CARGA -->
-      <v-col cols="12" md="4">
-        <v-alert type="info" variant="tonal" border="start">
-          📦
-          {{ vehiculoMayorCarga?.placa }}
-          transporta la mayor carga ({{ ((vehiculoMayorCarga?.peso ?? 0) / 1000).toFixed(1) }} t)
-        </v-alert>
-      </v-col>
-    </v-row>
-
-    <!-- GRÁFICA -->
-    <v-row class="mt-4">
-      <v-col cols="12">
-        <v-card class="pa-4 card-dark">
-          <div class="text-h6 mb-4">Top 10 Vehículos por Kilómetros</div>
-
-          <div class="chart-container">
-            <Bar :data="chartData" :options="chartOptions" />
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
-
-    <!-- TABLA -->
-    <v-data-table :headers="headers" :items="vehiculos" :items-per-page="10" class="mt-6">
-      <template #item.km="{ item }"> {{ item.km }} km </template>
-
-      <template #item.tiempo="{ item }">
-        <v-chip :color="colorTiempo(item.tiempo)" variant="tonal"> {{ item.tiempo }} min </v-chip>
-      </template>
-
-      <template #item.efectividad="{ item }">
-        <v-chip :color="colorEfectividad(item.efectividad)"> {{ item.efectividad }}% </v-chip>
-      </template>
-    </v-data-table>
+    <RendimientoCEDI
+      :tiempo-cedi-am-vehiculos="tiempoCediAmVehiculos"
+      :tiempo-cedi-pm-vehiculos="tiempoCediPmVehiculos"
+      :tiempo-cedi-am-zona="tiempoCediAmZona"
+      :tiempo-cedi-pm-zona="tiempoCediPmZona"
+    />
   </v-container>
 </template>
 
 <style scoped>
-.card-blue {
-  background: linear-gradient(135deg, #1e3c72, #2a5298);
-  color: white;
-}
-
-.card-purple {
-  background: linear-gradient(135deg, #42275a, #734b6d);
-  color: white;
-}
-
-.card-dark {
-  background: #1e1e1e;
-  color: white;
-}
-
 .chart-container {
-  height: 400px;
+  position: relative;
+  height: 450px;
+  width: 100%;
 }
 </style>

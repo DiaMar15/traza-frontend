@@ -1,8 +1,47 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { Bar } from 'vue-chartjs'
-import { Doughnut } from 'vue-chartjs'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
+import GoogleSheetsService from '@/services/googleSheetsService'
+
+const googleSheetsService = new GoogleSheetsService()
+const loading = ref(false)
+async function syncRutas() {
+  try {
+    loading.value = true
+
+    const response = await googleSheetsService.sincronizarRutas()
+
+    dialogoMensaje.value = response.message
+
+    dialogoColor.value = 'success'
+
+    dialogoIcono.value = 'mdi-check-circle'
+
+    mostrarDialogo.value = true
+
+    await cargarDashboard()
+  } catch (error) {
+    console.error(error)
+
+    dialogoMensaje.value = 'No fue posible sincronizar Google Sheets.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    mostrarDialogo.value = true
+  } finally {
+    loading.value = false
+  }
+}
+const mostrarDialogo = ref(false)
+
+const dialogoMensaje = ref('')
+
+const dialogoColor = ref<'success' | 'error'>('success')
+
+const dialogoIcono = ref('')
 
 import {
   Chart as ChartJS,
@@ -34,6 +73,7 @@ type DashboardPrincipalResponse = {
 
   detalle: DetalleRuta[]
 }
+
 /* --------------------------
    TARJETAS
 -------------------------- */
@@ -424,7 +464,37 @@ const headersTabla = computed(() => {
 
 <template>
   <v-container>
-    <h2 class="text-h5 font-weight-bold mb-4">Dashboard Logístico</h2>
+    <!-- ENCABEZADO -->
+    <div class="d-flex justify-space-between align-center mb-4">
+      <h2 class="text-h5 font-weight-bold">Dashboard Logístico</h2>
+
+      <v-btn color="success" prepend-icon="mdi-sync" :loading="loading" @click="syncRutas">
+        Sincronizar Google Sheets
+      </v-btn>
+    </div>
+
+    <v-dialog v-model="mostrarDialogo" max-width="500" persistent>
+      <v-card rounded="xl">
+        <v-card-text class="text-center pa-8">
+          <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
+
+          <div class="text-h5 font-weight-bold mb-3">
+            {{
+              dialogoColor === 'success' ? '¡Sincronización completada!' : 'Error al sincronizar'
+            }}
+          </div>
+
+          <div class="text-body-1 mb-6">
+            {{ dialogoMensaje }}
+          </div>
+
+          <v-btn :color="dialogoColor" size="large" rounded="lg" @click="mostrarDialogo = false">
+            Aceptar
+          </v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+
     <v-row class="mb-4">
       <v-col cols="12">
         <v-btn-toggle
@@ -442,12 +512,12 @@ const headersTabla = computed(() => {
       </v-col>
 
       <!-- FILTRO DÍA -->
-      <v-col cols="12" md="3" v-if="tipoFiltro === 'dia'">
+      <v-col v-if="tipoFiltro === 'dia'" cols="12" md="3">
         <v-text-field v-model="fecha" type="date" label="Fecha" @change="cargarDashboard" />
       </v-col>
 
       <!-- FILTRO SEMANA -->
-      <v-col cols="12" md="3" v-if="tipoFiltro === 'semana'">
+      <v-col v-if="tipoFiltro === 'semana'" cols="12" md="3">
         <v-text-field
           v-model="semana"
           label="Semana"
@@ -459,7 +529,7 @@ const headersTabla = computed(() => {
       </v-col>
 
       <!-- FILTRO MES -->
-      <v-col cols="12" md="3" v-if="tipoFiltro === 'mes'">
+      <v-col v-if="tipoFiltro === 'mes'" cols="12" md="3">
         <v-select
           v-model="mes"
           label="Mes"
@@ -481,10 +551,12 @@ const headersTabla = computed(() => {
         />
       </v-col>
     </v-row>
+
     <v-row class="mt-5">
       <v-col cols="12">
         <v-card rounded="xl" elevation="10">
           <v-card-title> Analisis Operativo </v-card-title>
+
           <v-card-subtitle class="pb-4">
             <v-btn
               color="primary"
@@ -495,7 +567,8 @@ const headersTabla = computed(() => {
               Analizar Operación
             </v-btn>
           </v-card-subtitle>
-          <v-data-table :items="detalle" :headers="headersTabla">
+
+          <v-data-table class="tabla-dashboard" :items="detalle" :headers="headersTabla">
             <template #item.peso="{ item }">
               {{ Number(item.peso || 0).toLocaleString('es-CO') }} kg
             </template>
@@ -505,9 +578,11 @@ const headersTabla = computed(() => {
               {{ Math.round(Number(item.valor || 0)).toLocaleString('es-CO') }}
             </template>
           </v-data-table>
+
           <v-dialog v-model="dialogDetalle" max-width="1700" height="90vh">
             <v-card rounded="xl">
               <v-card-title class="text-h5"> Analisis Operativo </v-card-title>
+
               <v-card-text>
                 <v-row>
                   <v-col cols="12">
@@ -540,7 +615,6 @@ const headersTabla = computed(() => {
     </v-row>
   </v-container>
 </template>
-
 <style scoped>
 /* KPI */
 .dashboard-card {
@@ -609,5 +683,15 @@ const headersTabla = computed(() => {
   text-align: center;
 
   pointer-events: none;
+}
+
+.tabla-dashboard :deep(thead th) {
+  background-color: #0f77ff !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.tabla-dashboard :deep(thead tr) {
+  background-color: #3b64e7 !important;
 }
 </style>

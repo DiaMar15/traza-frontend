@@ -1,13 +1,7 @@
 <script setup lang="ts">
+import { ref, onMounted, watch } from 'vue'
 
-import { ref, onMounted, watch } from "vue"
-
-import {
-  obtenerRutas,
-  crearRuta,
-  actualizarRuta,
-  eliminarRuta
-} from "@/services/rutasService"
+import { obtenerRutas, crearRuta, actualizarRuta, eliminarRuta } from '@/services/rutasService'
 
 /* -------------------------
    TYPES
@@ -39,11 +33,11 @@ const dialog = ref(false)
 
 const editando = ref(false)
 
-const search = ref("")
+const search = ref('')
 
 const options = ref({
   page: 1,
-  itemsPerPage: 10
+  itemsPerPage: 10,
 })
 
 /* -------------------------
@@ -51,87 +45,86 @@ const options = ref({
 ------------------------- */
 
 const headers = [
-
   {
-    title: "Fecha",
-    key: "fecha"
+    title: 'Fecha',
+    key: 'fecha',
   },
 
   {
-    title: "Día",
-    key: "dia"
+    title: 'Día',
+    key: 'dia',
   },
 
   {
-    title: "Placa",
-    key: "placa"
+    title: 'Placa',
+    key: 'placa',
   },
 
   {
-    title: "Conductor",
-    key: "conductor"
+    title: 'Conductor',
+    key: 'conductor',
   },
 
   {
-    title: "Auxiliar",
-    key: "auxiliar"
+    title: 'Auxiliar',
+    key: 'auxiliar',
   },
 
   {
-    title: "Empresa",
-    key: "empresa"
+    title: 'Empresa',
+    key: 'empresa',
   },
 
   {
-    title: "Zona",
-    key: "zona"
+    title: 'Zona',
+    key: 'zona',
   },
 
   {
-    title: "Destino",
-    key: "destino"
+    title: 'Destino',
+    key: 'destino',
   },
 
   {
-    title: "Hora Inicio",
-    key: "inicioRuta"
+    title: 'Hora Inicio',
+    key: 'inicioRuta',
   },
 
   {
-    title: "Hora Fin",
-    key: "finRuta"
+    title: 'Hora Fin',
+    key: 'finRuta',
   },
 
   {
-    title: "Tiempo Ruta",
-    key: "tiempoEnRuta"
+    title: 'Tiempo Ruta',
+    key: 'tiempoEnRuta',
   },
 
   {
-    title: "Hora Extra",
-    key: "horaExtra"
+    title: 'Hora Extra',
+    key: 'horaExtra',
   },
 
   {
-    title: "KM Inicial",
-    key: "kmInicial"
+    title: 'KM Inicial',
+    key: 'kmInicial',
   },
 
   {
-    title: "KM Final",
-    key: "kmFinal"
+    title: 'KM Final',
+    key: 'kmFinal',
   },
 
   {
-    title: "Total KM",
-    key: "totalKilometros"
+    title: 'Total KM',
+    key: 'totalKilometros',
   },
 
   {
-    title: "Acciones",
-    key: "acciones",
-    sortable: false
-  }
+    title: 'Acciones',
+    key: 'acciones',
+    sortable: false,
+  },
 ]
 
 /* -------------------------
@@ -140,14 +133,14 @@ const headers = [
 
 const form = ref<FormRuta>({
   id: null,
-  placa: "",
-  conductor: "",
-  empresa: "",
-  destino: "",
-  inicio_ruta: "",
-  fin_ruta: "",
+  placa: '',
+  conductor: '',
+  empresa: '',
+  destino: '',
+  inicio_ruta: '',
+  fin_ruta: '',
   km_inicial: 0,
-  km_final: 0
+  km_final: 0,
 })
 
 /* -------------------------
@@ -155,21 +148,17 @@ const form = ref<FormRuta>({
 ------------------------- */
 
 async function cargarRutas() {
-
   try {
-
     const res = await obtenerRutas(
       options.value.page,
       options.value.itemsPerPage,
-      search.value || ""
+      search.value || '',
     )
 
     rutas.value = res.data
 
     total.value = res.meta.total
-
   } catch (error) {
-
     console.error(error)
 
     rutas.value = []
@@ -183,10 +172,7 @@ async function cargarRutas() {
 ------------------------- */
 
 async function cargarVehiculos() {
-
-  const res = await fetch(
-    "http://localhost:3333/api/v1/vehiculos"
-  )
+  const res = await fetch('http://localhost:3333/api/v1/vehiculos')
 
   vehiculos.value = await res.json()
 }
@@ -195,35 +181,26 @@ async function cargarVehiculos() {
    AUTOCOMPLETAR
 ------------------------- */
 
-watch(() => form.value.placa, (placa) => {
+watch(
+  () => form.value.placa,
+  (placa) => {
+    const vehiculo = vehiculos.value.find((v) => v.placa === placa)
 
-  const vehiculo =
-    vehiculos.value.find(
-      v => v.placa === placa
-    )
+    if (vehiculo) {
+      form.value.conductor = vehiculo.conductor
 
-  if (vehiculo) {
-
-    form.value.conductor =
-      vehiculo.conductor
-
-    form.value.empresa =
-      vehiculo.empresa || ""
-  }
-})
+      form.value.empresa = vehiculo.empresa || ''
+    }
+  },
+)
 
 /* -------------------------
    BUSCADOR
 ------------------------- */
 
 watch(search, async (value) => {
-
-  if (
-    value === null ||
-    value === undefined
-  ) {
-
-    search.value = ""
+  if (value === null || value === undefined) {
+    search.value = ''
   }
 
   options.value.page = 1
@@ -236,19 +213,18 @@ watch(search, async (value) => {
 ------------------------- */
 
 function nuevaRuta() {
-
   editando.value = false
 
   form.value = {
     id: null,
-    placa: "",
-    conductor: "",
-    empresa: "",
-    destino: "",
-    inicio_ruta: "",
-    fin_ruta: "",
+    placa: '',
+    conductor: '',
+    empresa: '',
+    destino: '',
+    inicio_ruta: '',
+    fin_ruta: '',
     km_inicial: 0,
-    km_final: 0
+    km_final: 0,
   }
 
   dialog.value = true
@@ -259,7 +235,6 @@ function nuevaRuta() {
 ------------------------- */
 
 function editarRuta(ruta: any) {
-
   editando.value = true
 
   form.value = {
@@ -271,7 +246,7 @@ function editarRuta(ruta: any) {
     inicio_ruta: ruta.inicioRuta,
     fin_ruta: ruta.finRuta,
     km_inicial: ruta.kmInicial,
-    km_final: ruta.kmFinal
+    km_final: ruta.kmFinal,
   }
 
   dialog.value = true
@@ -282,9 +257,7 @@ function editarRuta(ruta: any) {
 ------------------------- */
 
 async function guardarRuta() {
-
   const data = {
-
     placa: form.value.placa,
 
     conductor: form.value.conductor,
@@ -297,13 +270,9 @@ async function guardarRuta() {
 
     fin_ruta: form.value.fin_ruta,
 
-    km_inicial: Number(
-      form.value.km_inicial
-    ),
+    km_inicial: Number(form.value.km_inicial),
 
-    km_final: Number(
-      form.value.km_final
-    ),
+    km_final: Number(form.value.km_final),
 
     peso: 1,
 
@@ -311,21 +280,12 @@ async function guardarRuta() {
 
     numero_facturas: 0,
 
-    numero_clientes: 0
+    numero_clientes: 0,
   }
 
-  if (
-    editando.value &&
-    form.value.id !== null
-  ) {
-
-    await actualizarRuta(
-      form.value.id,
-      data
-    )
-
+  if (editando.value && form.value.id !== null) {
+    await actualizarRuta(form.value.id, data)
   } else {
-
     await crearRuta(data)
   }
 
@@ -339,7 +299,6 @@ async function guardarRuta() {
 ------------------------- */
 
 async function borrarRuta(ruta: any) {
-
   await eliminarRuta(ruta.id)
 
   await cargarRutas()
@@ -350,146 +309,119 @@ async function borrarRuta(ruta: any) {
 ------------------------- */
 
 onMounted(() => {
-
   cargarRutas()
 
   cargarVehiculos()
 })
 
 defineExpose({
-  cargarRutas
+  cargarRutas,
 })
-
 </script>
 
 <template>
+  <v-card>
+    <v-card-title class="d-flex justify-space-between">
+      <span>Rutas</span>
 
-<v-card>
+      <v-btn color="primary" @click="nuevaRuta"> Nueva Ruta </v-btn>
+    </v-card-title>
 
-  <v-card-title
-    class="d-flex justify-space-between"
-  >
+    <!-- BUSCADOR -->
 
-    <span>Rutas</span>
+    <v-card-text>
+      <v-row>
+        <v-col cols="12" md="4">
+          <v-text-field
+            v-model="search"
+            label="Buscar rutas"
+            prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="comfortable"
+            clearable
+          />
+        </v-col>
+      </v-row>
+    </v-card-text>
 
-    <v-btn
-      color="primary"
-      @click="nuevaRuta"
+    <!-- TABLA -->
+
+    <v-data-table-server
+      class="tabla-rutas"
+      :headers="headers"
+      :items="rutas"
+      :items-length="total"
+      v-model:options="options"
+      @update:options="cargarRutas"
     >
-      Nueva Ruta
-    </v-btn>
+      <template #item.fecha="{ item }">
+        <span>{{ item.fecha || '-' }}</span>
+      </template>
 
-  </v-card-title>
+      <template #item.dia="{ item }">
+        <span>{{ item.dia || '-' }}</span>
+      </template>
 
-  <!-- BUSCADOR -->
+      <template #item.auxiliar="{ item }">
+        <span>{{ item.auxiliar || '-' }}</span>
+      </template>
 
-  <v-card-text>
+      <template #item.zona="{ item }">
+        <span>{{ item.zona || '-' }}</span>
+      </template>
 
-    <v-row>
+      <template #item.inicioRuta="{ item }">
+        <span>{{ item.inicioRuta || '-' }}</span>
+      </template>
 
-      <v-col cols="12" md="4">
+      <template #item.finRuta="{ item }">
+        <span>{{ item.finRuta || '-' }}</span>
+      </template>
 
-        <v-text-field
-          v-model="search"
-          label="Buscar rutas"
-          prepend-inner-icon="mdi-magnify"
-          variant="outlined"
-          density="comfortable"
-          clearable
-        />
+      <template #item.tiempoEnRuta="{ item }">
+        <span>{{ item.tiempoEnRuta || '-' }}</span>
+      </template>
 
-      </v-col>
+      <template #item.horaExtra="{ item }">
+        <span>{{ item.horaExtra || '-' }}</span>
+      </template>
 
-    </v-row>
+      <template #item.kmInicial="{ item }">
+        <span>
+          {{ Number(item.kmInicial || 0).toFixed(0) }}
+        </span>
+      </template>
 
-  </v-card-text>
+      <template #item.kmFinal="{ item }">
+        <span>
+          {{ Number(item.kmFinal || 0).toFixed(0) }}
+        </span>
+      </template>
 
-  <!-- TABLA -->
+      <template #item.totalKilometros="{ item }">
+        <span>
+          {{ Number(item.totalKilometros || 0).toFixed(0) }}
+        </span>
+      </template>
 
-  <v-data-table-server
-    :headers="headers"
-    :items="rutas"
-    :items-length="total"
-    v-model:options="options"
-    @update:options="cargarRutas"
-  >
+      <template #item.acciones="{ item }">
+        <div class="d-flex ga-2">
+          <v-btn icon color="blue" @click="editarRuta(item)"> ✏ </v-btn>
 
-    <template #item.fecha="{ item }">
-      <span>{{ item.fecha || "-" }}</span>
-    </template>
-
-    <template #item.dia="{ item }">
-      <span>{{ item.dia || "-" }}</span>
-    </template>
-
-    <template #item.auxiliar="{ item }">
-      <span>{{ item.auxiliar || "-" }}</span>
-    </template>
-
-    <template #item.zona="{ item }">
-      <span>{{ item.zona || "-" }}</span>
-    </template>
-
-    <template #item.inicioRuta="{ item }">
-      <span>{{ item.inicioRuta || "-" }}</span>
-    </template>
-
-    <template #item.finRuta="{ item }">
-      <span>{{ item.finRuta || "-" }}</span>
-    </template>
-
-    <template #item.tiempoEnRuta="{ item }">
-      <span>{{ item.tiempoEnRuta || "-" }}</span>
-    </template>
-
-    <template #item.horaExtra="{ item }">
-      <span>{{ item.horaExtra || "-" }}</span>
-    </template>
-
-    <template #item.kmInicial="{ item }">
-      <span>
-        {{ Number(item.kmInicial || 0).toFixed(0) }}
-      </span>
-    </template>
-
-    <template #item.kmFinal="{ item }">
-      <span>
-        {{ Number(item.kmFinal || 0).toFixed(0) }}
-      </span>
-    </template>
-
-    <template #item.totalKilometros="{ item }">
-      <span>
-        {{ Number(item.totalKilometros || 0).toFixed(0) }}
-      </span>
-    </template>
-
-    <template #item.acciones="{ item }">
-
-      <div class="d-flex ga-2">
-
-        <v-btn
-          icon
-          color="blue"
-          @click="editarRuta(item)"
-        >
-          ✏
-        </v-btn>
-
-        <v-btn
-          icon
-          color="red"
-          @click="borrarRuta(item)"
-        >
-          🗑
-        </v-btn>
-
-      </div>
-
-    </template>
-
-  </v-data-table-server>
-
-</v-card>
-
+          <v-btn icon color="red" @click="borrarRuta(item)"> 🗑 </v-btn>
+        </div>
+      </template>
+    </v-data-table-server>
+  </v-card>
 </template>
+<style scoped>
+.tabla-rutas :deep(thead th) {
+  background-color: #2563eb !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.tabla-rutas :deep(thead tr) {
+  background-color: #2563eb !important;
+}
+</style>

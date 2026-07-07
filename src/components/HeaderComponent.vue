@@ -1,16 +1,10 @@
 <template>
   <div class="header-wrapper">
-    <v-img
-      src="@/assets/morichal.jpg"
-      alt="Logo"
-      class="logo"
-      contain
-    />
+    <v-img src="@/assets/logo.png" alt="Logo" class="logo" contain />
   </div>
 </template>
 
-<script setup lang="ts">
-</script>
+<script setup lang="ts"></script>
 
 <style scoped>
 .header-wrapper {

@@ -1,6 +1,5 @@
 <template>
-  <v-app-bar app flat color="#2e2e2e">
-
+  <v-app-bar>
     <!-- ☰ HAMBURGUESA (SIEMPRE VISIBLE) -->
     <v-app-bar-nav-icon @click="$emit('toggle-drawer')" />
 
@@ -8,10 +7,7 @@
 
     <v-spacer />
 
-    <v-btn color="error" @click="logout">
-      Cerrar sesión
-    </v-btn>
-
+    <v-btn color="error" @click="logout"> Cerrar sesión </v-btn>
   </v-app-bar>
 </template>
 

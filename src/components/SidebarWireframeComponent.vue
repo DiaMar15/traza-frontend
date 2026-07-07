@@ -1,11 +1,5 @@
 <template>
-  <v-navigation-drawer
-    v-model="internalDrawer"
-    :permanent="isDesktop"
-    :temporary="!isDesktop"
-    app
-    color="#2e2e2e"
-  >
+  <v-navigation-drawer v-model="internalDrawer" :permanent="isDesktop" :temporary="!isDesktop" app>
     <!-- 👤 USER -->
     <v-list>
       <v-list-item
@@ -18,7 +12,6 @@
     <v-divider class="my-2" />
 
     <v-list density="compact" nav>
-
       <!-- DASHBOARD -->
       <v-list-item
         prepend-icon="mdi-view-dashboard"
@@ -39,12 +32,7 @@
       </v-list-group>
 
       <!-- RUTAS -->
-      <v-list-item
-        prepend-icon="mdi-map"
-        title="Rutas"
-        to="/app/rutas"
-        @click="closeDrawer"
-      />
+      <v-list-item prepend-icon="mdi-map" title="Rutas" to="/app/rutas" @click="closeDrawer" />
 
       <!-- CREAR -->
       <v-list-item
@@ -62,7 +50,7 @@
         @click="closeDrawer"
       />
 
-        <!-- CONDUCTORES -->
+      <!-- CONDUCTORES -->
       <v-list-item
         prepend-icon="mdi-steering"
         title="Conductores"
@@ -77,15 +65,11 @@
         to="/app/usuarios"
         @click="closeDrawer"
       />
-      
+
       <v-divider class="my-2" />
 
       <!-- LOGOUT -->
-      <v-list-item
-        prepend-icon="mdi-logout"
-        title="Cerrar sesión"
-        @click="logout"
-      />
+      <v-list-item prepend-icon="mdi-logout" title="Cerrar sesión" @click="logout" />
     </v-list>
   </v-navigation-drawer>
 </template>
@@ -101,9 +85,12 @@ const userData: any = inject('userData')
 const props = defineProps<{ drawer: boolean }>()
 const internalDrawer = ref(props.drawer)
 
-watch(() => props.drawer, (val) => {
-  internalDrawer.value = val
-})
+watch(
+  () => props.drawer,
+  (val) => {
+    internalDrawer.value = val
+  },
+)
 
 // responsive
 const isDesktop = ref(window.innerWidth >= 1280)

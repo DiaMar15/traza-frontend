@@ -65,6 +65,7 @@ function colorCargo(cargo: string) {
     <v-divider />
 
     <v-data-table
+      class="tabla-personal"
       :headers="headers"
       :items="trabajadores"
       items-per-page="10"
@@ -81,7 +82,7 @@ function colorCargo(cargo: string) {
       <!-- Cargo -->
 
       <template #item.cargo="{ item }">
-        <v-chip :color="colorCargo(item.cargo)" size="small" variant="tonal">
+        <v-chip :color="colorCargo(item.cargo)" size="small" variant="elevated">
           {{ item.cargo }}
         </v-chip>
       </template>
@@ -93,7 +94,7 @@ function colorCargo(cargo: string) {
       <!-- Extras -->
 
       <template #item.extras="{ item }">
-        <v-chip v-if="item.extras > 0" color="deep-purple" variant="tonal">
+        <v-chip v-if="item.extras > 0" color="deep-purple" variant="elevated">
           +{{ item.extras }} h
         </v-chip>
 
@@ -103,7 +104,7 @@ function colorCargo(cargo: string) {
       <!-- Negativas -->
 
       <template #item.negativas="{ item }">
-        <v-chip v-if="item.negativas > 0" color="red" variant="tonal">
+        <v-chip v-if="item.negativas > 0" color="red" variant="elevated">
           -{{ item.negativas }} h
         </v-chip>
 
@@ -112,3 +113,15 @@ function colorCargo(cargo: string) {
     </v-data-table>
   </v-card>
 </template>
+
+<style scoped>
+.tabla-personal :deep(thead th) {
+  background-color: #1b63ff !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.tabla-personal :deep(thead tr) {
+  background-color: #1b63ff !important;
+}
+</style>

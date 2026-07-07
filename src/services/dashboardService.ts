@@ -39,3 +39,13 @@ export async function obtenerKilometrosPorZona(token: string) {
   const data = await res.json()
   return data
 }
+
+export async function obtenerSemanas() {
+  const response = await fetch(`${API}/dashboard/semanas`)
+
+  if (!response.ok) {
+    throw new Error('No fue posible obtener las semanas')
+  }
+
+  return await response.json()
+}
