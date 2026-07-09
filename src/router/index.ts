@@ -1,32 +1,31 @@
-import { createRouter, createWebHistory } from "vue-router"
-import { authSetStore } from "@/stores/AuthStore"
+import { createRouter, createWebHistory } from 'vue-router'
+import { authSetStore } from '@/stores/AuthStore'
 
 // Layouts
-import WireframeLayout from "@/Layouts/WireframeLayout.vue"
-import AuthLayout from "@/Layouts/AuthLayout.vue"
+import WireframeLayout from '@/Layouts/WireframeLayout.vue'
+import AuthLayout from '@/Layouts/AuthLayout.vue'
 
 // Views
-import DashboardView from "@/views/DashboardView.vue"
-import RutasView from "@/views/RutasView.vue"
-import CrearRutaView from "@/views/CrearRutaView.vue"
-import UsuariosView from "@/views/UsuariosView.vue"
-import LoginView from "@/views/LoginView.vue"
+import DashboardView from '@/views/DashboardView.vue'
+import RutasView from '@/views/RutasView.vue'
+import CrearRutaView from '@/views/CrearRutaView.vue'
+import UsuariosView from '@/views/UsuariosView.vue'
+import LoginView from '@/views/LoginView.vue'
 
 // 🔥 NUEVAS VISTAS
-import RendimientoView from "@/views/RendimientoView.vue"
+import RendimientoView from '@/views/RendimientoView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
 
   routes: [
-
     /* --------------------------
        REDIRECCIÓN INICIAL
     -------------------------- */
     {
       path: '/',
 
-      redirect: '/auth/login'
+      redirect: '/auth/login',
     },
 
     /* --------------------------
@@ -38,41 +37,30 @@ const router = createRouter({
       component: AuthLayout,
 
       children: [
-
         {
           path: 'login',
 
-          component: LoginView
+          component: LoginView,
         },
 
         {
           path: 'register',
 
-          component: () =>
-            import(
-              '@/views/RegisterView.vue'
-            )
+          component: () => import('@/views/RegisterView.vue'),
         },
 
         {
           path: 'forgot-password',
 
-          component: () =>
-            import(
-              '@/views/ForgotPasswordView.vue'
-            )
+          component: () => import('@/views/ForgotPasswordView.vue'),
         },
 
         {
           path: 'reset-password',
 
-          component: () =>
-            import(
-              '@/views/ResetPasswordView.vue'
-            )
-        }
-
-      ]
+          component: () => import('@/views/ResetPasswordView.vue'),
+        },
+      ],
     },
 
     /* --------------------------
@@ -84,20 +72,22 @@ const router = createRouter({
       component: WireframeLayout,
 
       meta: {
-
-        requiresAuth: true
-
+        requiresAuth: true,
       },
 
       children: [
-
         /* --------------------------
            DASHBOARD PRINCIPAL
         -------------------------- */
         {
+          path: '/app/perfil',
+          component: () => import('@/views/PerfilView.vue'),
+        },
+
+        {
           path: 'dashboard',
 
-          component: DashboardView
+          component: DashboardView,
         },
 
         /* --------------------------
@@ -106,25 +96,19 @@ const router = createRouter({
         {
           path: 'dashboard/rendimiento',
 
-          component: RendimientoView
+          component: RendimientoView,
         },
 
         {
           path: 'dashboard/costos',
 
-          component: () =>
-            import(
-              '@/views/CostosView.vue'
-            )
+          component: () => import('@/views/CostosView.vue'),
         },
 
         {
           path: 'dashboard/personal',
 
-          component: () =>
-            import(
-              '@/views/PersonalView.vue'
-            )
+          component: () => import('@/views/PersonalView.vue'),
         },
 
         /* --------------------------
@@ -133,28 +117,25 @@ const router = createRouter({
         {
           path: 'rutas',
 
-          component: RutasView
+          component: RutasView,
         },
 
         {
           path: 'crearrutas',
 
-          component: CrearRutaView
+          component: CrearRutaView,
         },
 
         {
           path: 'usuarios',
 
-          component: UsuariosView
+          component: UsuariosView,
         },
 
         {
           path: 'vehiculos',
 
-          component: () =>
-            import(
-              '@/views/VehiculosView.vue'
-            )
+          component: () => import('@/views/VehiculosView.vue'),
         },
 
         /* --------------------------
@@ -163,57 +144,25 @@ const router = createRouter({
         {
           path: 'conductores',
 
-          component: () =>
-            import(
-              '@/views/ConductoresView.vue'
-            )
-        }
-
-      ]
-    }
-  ]
+          component: () => import('@/views/ConductoresView.vue'),
+        },
+      ],
+    },
+  ],
 })
 
 /* --------------------------
    🔐 GUARD DE AUTENTICACIÓN
 -------------------------- */
 router.beforeEach((to, from, next) => {
+  const auth = authSetStore()
 
-  const auth =
-    authSetStore()
-
-  if (
-
-    to.matched.some(
-      r => r.meta.requiresAuth
-    )
-
-    &&
-
-    !auth.isAuthenticated()
-
-  ) {
-
-    return next(
-      '/auth/login'
-    )
+  if (to.matched.some((r) => r.meta.requiresAuth) && !auth.isAuthenticated()) {
+    return next('/auth/login')
   }
 
-  if (
-
-    to.path.startsWith(
-      '/auth'
-    )
-
-    &&
-
-    auth.isAuthenticated()
-
-  ) {
-
-    return next(
-      '/app/dashboard'
-    )
+  if (to.path.startsWith('/auth') && auth.isAuthenticated()) {
+    return next('/app/dashboard')
   }
 
   next()

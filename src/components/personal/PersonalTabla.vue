@@ -94,7 +94,7 @@ function colorCargo(cargo: string) {
       <!-- Extras -->
 
       <template #item.extras="{ item }">
-        <v-chip v-if="item.extras > 0" color="deep-purple" variant="elevated">
+        <v-chip v-if="item.extras > 0" color="yellow" variant="elevated">
           +{{ item.extras }} h
         </v-chip>
 

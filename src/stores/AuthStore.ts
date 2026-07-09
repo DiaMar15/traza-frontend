@@ -11,12 +11,30 @@ export const authSetStore = defineStore('auth', {
         return null
       }
     })(),
+
     token: sessionStorage.getItem('token') || null,
   }),
 
   actions: {
+    /* --------------------------
+       ACTUALIZAR PERFIL
+    -------------------------- */
+    async refreshProfile() {
+      if (!this.token) return
 
-    async login(userData: { correo: string, password: string }) {
+      const auth = new AuthService()
+
+      const user = await auth.getProfile(this.token)
+
+      this.user = user
+
+      sessionStorage.setItem('user', JSON.stringify(user))
+    },
+
+    /* --------------------------
+       LOGIN
+    -------------------------- */
+    async login(userData: { correo: string; password: string }) {
       try {
         const auth = new AuthService()
 
@@ -29,32 +47,37 @@ export const authSetStore = defineStore('auth', {
         }
 
         this.token = token
+
         sessionStorage.setItem('token', token)
 
-        const user = await auth.getProfile(token)
-
-        this.user = user
-        sessionStorage.setItem('user', JSON.stringify(user))
+        await this.refreshProfile()
 
         router.push('/app/dashboard')
-
-      } catch (error: any) {
-        alert(error?.message || 'Error al iniciar sesión')
+      } catch (error) {
+        throw error
       }
     },
 
+    /* --------------------------
+       AUTENTICADO
+    -------------------------- */
     isAuthenticated(): boolean {
       return !!this.token
     },
 
+    /* --------------------------
+       CERRAR SESIÓN
+    -------------------------- */
     logout() {
       this.token = null
+
       this.user = null
 
       sessionStorage.removeItem('token')
+
       sessionStorage.removeItem('user')
 
       router.push('/auth/login')
-    }
-  }
+    },
+  },
 })

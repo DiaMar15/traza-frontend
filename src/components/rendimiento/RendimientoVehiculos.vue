@@ -5,13 +5,21 @@ defineProps<{
   colorTiempo: (valor: number) => string
   colorEfectividad: (valor: number) => string
 }>()
+
+function formatearTiempo(minutos: number) {
+  const horas = Math.floor(minutos / 60)
+
+  const minutosRestantes = minutos % 60
+
+  if (minutosRestantes === 0) {
+    return `${horas} h`
+  }
+
+  return `${horas} h ${minutosRestantes} min`
+}
 </script>
 
 <template>
-  <!-- ==========================================
-       RENDIMIENTO POR VEHÍCULO
-  ========================================== -->
-
   <v-divider class="my-6" />
 
   <div class="d-flex align-center justify-space-between mb-4">
@@ -42,7 +50,7 @@ defineProps<{
 
       <template #item.tiempo="{ item }">
         <v-chip :color="colorTiempo(item.tiempo)" size="small" variant="elevated">
-          {{ item.tiempo }} min
+          {{ formatearTiempo(item.tiempo) }}
         </v-chip>
       </template>
 
@@ -54,6 +62,7 @@ defineProps<{
     </v-data-table>
   </v-card>
 </template>
+
 <style scoped>
 .tabla-rendimiento :deep(thead th) {
   background: #1b7dec !important;

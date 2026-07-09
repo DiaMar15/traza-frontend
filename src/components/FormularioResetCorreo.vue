@@ -1,19 +1,15 @@
 <template>
   <v-form @submit.prevent="enviar">
-    <v-text-field
-      v-model="correo"
-      label="Correo"
-      type="email"
-      required
-      class="text-black"
-    />
+    <v-text-field v-model="correo" label="Correo" type="email" required class="text-black" />
 
-    <v-btn color="primary" type="submit" block>
-      Enviar enlace
-    </v-btn>
+    <v-btn color="primary" type="submit" block> Enviar enlace </v-btn>
 
     <div class="text-center mt-4">
-      <a @click="router.push('/login')" class="text-primary text-decoration-underline" style="cursor: pointer;">
+      <a
+        @click="router.push('/login')"
+        class="text-primary text-decoration-underline"
+        style="cursor: pointer"
+      >
         ¿Recordaste tu contraseña? Inicia sesión
       </a>
     </div>
@@ -29,15 +25,16 @@ const router = useRouter()
 
 const emit = defineEmits<{
   (e: 'exito', msg: string): void
+  (e: 'error', msg: string): void
 }>()
 
 const enviar = async () => {
   const res = await fetch('http://localhost:3333/forgot-password', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ correo: correo.value })
+    body: JSON.stringify({ correo: correo.value }),
   })
 
   const data = await res.json()
@@ -45,7 +42,7 @@ const enviar = async () => {
   if (res.ok) {
     emit('exito', 'Correo enviado correctamente')
   } else {
-    alert(data.message || 'Error al enviar el correo')
+    emit('error', data.message || 'Error al enviar el correo')
   }
 }
 </script>

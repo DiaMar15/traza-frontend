@@ -427,17 +427,17 @@ const chartOptions = {
       suggestedMax: Math.max(...topZonas.value.map((z) => z.total)) * 1.15,
 
       ticks: {
-        color: '#FFFFFF',
+        color: '#00BEFF',
       },
 
       grid: {
-        color: '#2A2A40',
+        color: '#000000',
       },
     },
 
     y: {
       ticks: {
-        color: '#FFFFFF',
+        color: '#00BEFF',
         padding: 8,
       },
 
@@ -472,6 +472,17 @@ function colorTiempo(valor: number) {
   return 'red'
 }
 
+function formatearTiempo(minutos: number) {
+  const horas = Math.floor(minutos / 60)
+
+  const minutosRestantes = minutos % 60
+
+  if (minutosRestantes === 0) {
+    return `${horas} h`
+  }
+
+  return `${horas} h ${minutosRestantes} min`
+}
 /* ==========================
    TABLA
 ========================== */

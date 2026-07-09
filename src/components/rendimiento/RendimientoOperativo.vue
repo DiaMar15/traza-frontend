@@ -128,7 +128,7 @@ const chartOptions = {
   scales: {
     x: {
       ticks: {
-        color: '#FFFFFF',
+        color: '#00BEFF',
       },
 
       grid: {
@@ -138,7 +138,7 @@ const chartOptions = {
 
     y: {
       ticks: {
-        color: '#FFFFFF',
+        color: '#00BEFF',
       },
 
       grid: {

@@ -7,6 +7,20 @@ const loading = ref(false)
 
 const dialog = ref(false)
 
+const dialogo = ref(false)
+
+const dialogoTitulo = ref('')
+
+const dialogoMensaje = ref('')
+
+const dialogoColor = ref<'success' | 'error'>('success')
+
+const dialogoIcono = ref('')
+
+const dialogConfirmar = ref(false)
+
+const vehiculoEliminar = ref<any>(null)
+
 const editando = ref(false)
 
 const busqueda = ref('')
@@ -134,7 +148,15 @@ async function cargarVehiculos() {
   } catch (error) {
     console.error(error)
 
-    alert('Error cargando vehículos')
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = 'No fue posible cargar los vehículos.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
   } finally {
     loading.value = false
   }
@@ -212,13 +234,29 @@ async function sincronizarVehiculos() {
 
     const data = await res.json()
 
-    alert(data.message)
-
     await cargarVehiculos()
+
+    dialogoTitulo.value = 'Sincronización completada'
+
+    dialogoMensaje.value = data.message
+
+    dialogoColor.value = 'success'
+
+    dialogoIcono.value = 'mdi-check-circle'
+
+    dialogo.value = true
   } catch (error) {
     console.error(error)
 
-    alert('Error sincronizando vehículos')
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = 'No fue posible sincronizar los vehículos.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
   } finally {
     loading.value = false
   }
@@ -297,47 +335,102 @@ async function guardarVehiculo() {
     }
 
     if (!data.placa) {
-      alert('La placa es obligatoria')
+      dialogoTitulo.value = 'Campo obligatorio'
+
+      dialogoMensaje.value = 'La placa del vehículo es obligatoria.'
+
+      dialogoColor.value = 'error'
+
+      dialogoIcono.value = 'mdi-alert-circle'
+
+      dialogo.value = true
+
       return
     }
 
     if (editando.value && form.value.id !== null) {
       await actualizarVehiculo(form.value.id, data)
 
-      alert('Vehículo actualizado')
+      dialogoTitulo.value = 'Vehículo actualizado'
+
+      dialogoMensaje.value = 'El vehículo fue actualizado correctamente.'
+
+      dialogoColor.value = 'success'
+
+      dialogoIcono.value = 'mdi-check-circle'
+
+      dialogo.value = true
     } else {
       await crearVehiculo(data)
 
-      alert('Vehículo creado')
-    }
+      dialogoTitulo.value = 'Vehículo creado'
 
-    dialog.value = false
+      dialogoMensaje.value = 'El vehículo fue creado correctamente.'
+
+      dialogoColor.value = 'success'
+
+      dialogoIcono.value = 'mdi-check-circle'
+
+      dialogo.value = true
+    }
 
     await cargarVehiculos()
   } catch (error: any) {
     console.error(error)
 
-    alert(error.message || 'Error guardando vehículo')
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = error.message || 'No fue posible guardar el vehículo.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
   }
 }
 
-async function borrarVehiculo(item: any) {
-  const confirmar = confirm(`¿Retirar vehículo ${item.placa}?`)
+function borrarVehiculo(item: any) {
+  vehiculoEliminar.value = item
 
-  if (!confirmar) {
+  dialogConfirmar.value = true
+}
+
+async function confirmarEliminarVehiculo() {
+  if (!vehiculoEliminar.value) {
     return
   }
 
   try {
-    await eliminarVehiculo(item.id)
+    await eliminarVehiculo(vehiculoEliminar.value.id)
 
-    alert('Vehículo retirado')
+    dialogConfirmar.value = false
 
     await cargarVehiculos()
+
+    dialogoTitulo.value = 'Vehículo retirado'
+
+    dialogoMensaje.value = 'El vehículo fue retirado correctamente.'
+
+    dialogoColor.value = 'success'
+
+    dialogoIcono.value = 'mdi-check-circle'
+
+    dialogo.value = true
   } catch (error) {
     console.error(error)
 
-    alert('Error retirando vehículo')
+    dialogConfirmar.value = false
+
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = 'No fue posible retirar el vehículo.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
   }
 }
 
@@ -397,7 +490,6 @@ onMounted(cargarVehiculos)
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
             style="width: 260px"
-            e
           />
 
           <v-select
@@ -535,9 +627,45 @@ onMounted(cargarVehiculos)
         <v-card-actions>
           <v-spacer />
 
-          <v-btn @click="dialog = false"> Cancelar </v-btn>
-
+          <v-btn color="red" @click="dialog = false"> Cancelar </v-btn>
           <v-btn color="success" @click="guardarVehiculo"> Guardar </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog v-model="dialogo" max-width="450">
+      <v-card rounded="xl">
+        <v-card-text class="text-center pa-8">
+          <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
+
+          <div class="text-h5 font-weight-bold mb-2">
+            {{ dialogoTitulo }}
+          </div>
+
+          <div class="text-body-1">
+            {{ dialogoMensaje }}
+          </div>
+
+          <v-btn class="mt-6" :color="dialogoColor" @click="dialogo = false"> Aceptar </v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="dialogConfirmar" max-width="450">
+      <v-card rounded="xl">
+        <v-card-title class="text-h5"> Retirar vehículo </v-card-title>
+
+        <v-card-text>
+          ¿Deseas retirar el vehículo
+          <strong>{{ vehiculoEliminar?.placa }}</strong
+          >?
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn variant="text" @click="dialogConfirmar = false"> Cancelar </v-btn>
+
+          <v-btn color="error" @click="confirmarEliminarVehiculo"> Retirar </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>

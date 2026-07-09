@@ -1,13 +1,28 @@
 <template>
-  <v-navigation-drawer v-model="internalDrawer" :permanent="isDesktop" :temporary="!isDesktop" app>
+  <div v-if="isDesktop && !internalDrawer" class="hover-zone" @mouseenter="abrirDrawer" />
+
+  <v-navigation-drawer
+    v-model="internalDrawer"
+    :permanent="isDesktop"
+    :temporary="!isDesktop"
+    :rail="isDesktop ? rail : false"
+    :expand-on-hover="!props.fijado"
+    app
+  >
     <!-- 👤 USER -->
     <v-list>
       <v-list-item
-        :prepend-avatar="userData?.avatar"
+        :prepend-avatar="
+          userData?.avatar
+            ? `http://localhost:3333/${userData.avatar}`
+            : 'https://i.pravatar.cc/100?img=2'
+        "
         :title="userData?.nombre"
         :subtitle="userData?.email"
       />
     </v-list>
+
+    <v-list-item title="Mi Perfil" to="/app/perfil" @click="closeDrawer" />
 
     <v-divider class="my-2" />
 
@@ -52,8 +67,8 @@
 
       <!-- CONDUCTORES -->
       <v-list-item
-        prepend-icon="mdi-steering"
-        title="Conductores"
+        prepend-icon="mdi-badge-account"
+        title="Trabajadores"
         to="/app/conductores"
         @click="closeDrawer"
       />
@@ -82,9 +97,14 @@ const auth = authSetStore()
 const userData: any = inject('userData')
 
 // drawer
-const props = defineProps<{ drawer: boolean }>()
+const props = defineProps<{
+  drawer: boolean
+  fijado: boolean
+}>()
 const internalDrawer = ref(props.drawer)
+const rail = ref(true)
 
+const drawerFijado = ref(false)
 watch(
   () => props.drawer,
   (val) => {
@@ -97,11 +117,16 @@ const isDesktop = ref(window.innerWidth >= 1280)
 
 const handleResize = () => {
   isDesktop.value = window.innerWidth >= 1280
-  internalDrawer.value = isDesktop.value
+
+  if (!isDesktop.value) {
+    internalDrawer.value = false
+  }
 }
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+
+  internalDrawer.value = false
 })
 
 onBeforeUnmount(() => {
@@ -112,13 +137,56 @@ const closeDrawer = () => {
   if (!isDesktop.value) internalDrawer.value = false
 }
 
+let timeout: number | null = null
+
+const abrirDrawer = () => {
+  if (!isDesktop.value) return
+
+  if (timeout) {
+    clearTimeout(timeout)
+    timeout = null
+  }
+
+  internalDrawer.value = true
+}
+
+const cancelarCerrar = () => {
+  if (timeout) {
+    clearTimeout(timeout)
+    timeout = null
+  }
+}
+
+const cerrarDrawer = () => {
+  if (!isDesktop.value) return
+
+  timeout = window.setTimeout(() => {
+    internalDrawer.value = false
+  }, 250)
+}
+
 const logout = () => {
   auth.logout()
+}
+
+const toggleRail = () => {
+  drawerFijado.value = !drawerFijado.value
+
+  rail.value = !drawerFijado.value
 }
 </script>
 
 <style scoped>
 .v-navigation-drawer {
   border-right: 1px solid #eee;
+}
+
+.hover-zone {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 100vh;
+  z-index: 9998;
 }
 </style>

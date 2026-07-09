@@ -401,7 +401,7 @@ const headersPerdidas = [
       </v-col>
     </v-row>
     <!-- TABLA -->
-    <v-card class="glass-card pa-2" rounded="xl" elevation="8">
+    <v-card rounded="xl" elevation="8">
       <v-data-table
         :headers="headers"
         :items="costosFiltrados"

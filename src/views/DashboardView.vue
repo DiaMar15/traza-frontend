@@ -54,15 +54,10 @@ import {
 } from 'chart.js'
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels)
-type Card = {
-  title: string
-  icon: string
-  value: number
-  color: string
-  extra: string
-}
 
 type DashboardPrincipalResponse = {
+  vistaGeneral: boolean
+
   kpis: {
     totalRutas: number
     totalClientes: number
@@ -78,35 +73,14 @@ type DashboardPrincipalResponse = {
    TARJETAS
 -------------------------- */
 
-const dashboardCards = ref<Card[]>([
-  {
-    title: 'Total Rutas',
-    icon: 'mdi-map-marker-path',
-    value: 0,
-    color: 'card-blue',
-    extra: 'Operación actual',
-  },
-
-  {
-    title: 'Total Clientes',
-    icon: 'mdi-account-multiple',
-    value: 0,
-    color: 'card-cyan',
-    extra: 'Clientes atendidos',
-  },
-
-  {
-    title: 'Dinero Movido',
-    icon: 'mdi-cash',
-    value: 0,
-    color: 'card-green',
-    extra: 'Valor total rutas',
-  },
-])
-
 type DetalleRuta = {
   placa: string
   zona: string
+
+  fecha?: string
+  semana?: string | number
+  mes?: string
+
   clientes: number
   peso: number
   valor: number
@@ -114,79 +88,7 @@ type DetalleRuta = {
 
 const dialogDetalle = ref(false)
 
-const detalleSeleccionado = ref<any>(null)
-
 const detalle = ref<DetalleRuta[]>([])
-
-const valorPorZona = computed(() => {
-  const zonas: Record<string, number> = {}
-
-  detalle.value.forEach((item) => {
-    const zona = item.zona || 'SIN ZONA'
-
-    if (!zonas[zona]) {
-      zonas[zona] = 0
-    }
-
-    zonas[zona] += Number(item.valor || 0)
-  })
-
-  return zonas
-})
-
-const detalleChartData = computed(() => {
-  if (!detalleSeleccionado.value) {
-    return {
-      labels: [],
-      datasets: [],
-    }
-  }
-
-  let valor = 0
-  let color = '#42A5F5'
-
-  if (indicadorActivo.value === 'clientes') {
-    valor = Number(detalleSeleccionado.value.clientes || 0)
-    color = '#1976D2'
-  }
-
-  if (indicadorActivo.value === 'peso') {
-    valor = Number(detalleSeleccionado.value.peso || 0)
-    color = '#2E7D32'
-  }
-
-  if (indicadorActivo.value === 'valor') {
-    valor = Number(detalleSeleccionado.value.valor || 0)
-    color = '#FB8C00'
-  }
-
-  return {
-    labels: ['Valor', 'Resto'],
-
-    datasets: [
-      {
-        data: [valor, valor * 0.25],
-
-        backgroundColor: [color, '#2A2A40'],
-
-        borderWidth: 0,
-
-        hoverOffset: 15,
-      },
-    ],
-  }
-})
-const detalleChartOptions = {
-  responsive: true,
-
-  maintainAspectRatio: false,
-
-  plugins: {
-    legend: {
-      position: 'bottom' as const,
-    },
-  },
-}
 
 const chartOptions = {
   responsive: true,
@@ -213,7 +115,7 @@ const chartOptions = {
 
       offset: 8,
 
-      color: '#ffffff',
+      color: '#039BE5',
 
       font: {
         weight: 'bold' as const,
@@ -237,19 +139,18 @@ const chartOptions = {
   scales: {
     x: {
       ticks: {
-        color: '#ffffff',
+        color: '#039BE5',
       },
     },
 
     y: {
       ticks: {
-        color: '#ffffff',
+        color: '#039BE5',
       },
     },
   },
 }
 
-const indicadorActivo = ref<'clientes' | 'peso' | 'valor'>('clientes')
 const tipoGrafico = ref('clientes')
 const graficoActual = computed(() => {
   const datos = [...detalle.value]
@@ -284,6 +185,10 @@ const graficoActual = computed(() => {
     return b.valor - a.valor
   })
 
+  /* --------------------------
+     VALOR POR ZONA
+  -------------------------- */
+
   if (tipoGrafico.value === 'zona') {
     const zonas: Record<string, number> = {}
 
@@ -297,8 +202,13 @@ const graficoActual = computed(() => {
       zonas[zona] += Number(item.valor || 0)
     })
 
-    const ordenado = Object.entries(zonas).sort((a, b) => b[1] - a[1])
-    console.log(detalle.value.slice(0, 13))
+    let ordenado = Object.entries(zonas).sort((a, b) => b[1] - a[1])
+
+    // Solo limitar cuando se está viendo el total general
+    if (vistaGeneral.value) {
+      ordenado = ordenado.slice(0, 15)
+    }
+
     return {
       labels: ordenado.map((z) => z[0]),
 
@@ -316,6 +226,10 @@ const graficoActual = computed(() => {
     }
   }
 
+  /* --------------------------
+     CLIENTES / PESO / VALOR
+  -------------------------- */
+
   let color = '#1976D2'
   let etiqueta = 'Clientes'
 
@@ -331,6 +245,7 @@ const graficoActual = computed(() => {
 
   return {
     labels: datosAgrupados.map((item: any) => item.placa),
+
     datasets: [
       {
         label: etiqueta,
@@ -357,16 +272,10 @@ const graficoActual = computed(() => {
 const tipoFiltro = ref('dia')
 
 const fecha = ref('')
-const semana = ref('')
+const semana = ref<number | null>(null)
 const mes = ref('')
-
-const ordenDias = ['DOMINGO', 'LUNES', 'MARTES', 'MIERCOLES', 'JUEVES', 'VIERNES', 'SABADO']
-
-const normalizar = (texto: string) =>
-  texto
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toUpperCase()
+const semanas = ref<number[]>([])
+const vistaGeneral = ref(false)
 
 /* --------------------------
    FETCH
@@ -378,6 +287,23 @@ async function fetchJSON<T>(url: string): Promise<T> {
   if (!res.ok) throw new Error(url)
 
   return await res.json()
+}
+
+async function cargarSemanas() {
+  try {
+    const data = await fetchJSON<{
+      semana: number
+      semanas: number[]
+    }>('http://localhost:3333/api/v1/dashboard/semanas')
+
+    semanas.value = data.semanas
+
+    if (!semana.value && data.semana) {
+      semana.value = data.semana
+    }
+  } catch (error) {
+    console.error('Error cargando semanas:', error)
+  }
 }
 
 /* --------------------------
@@ -395,7 +321,7 @@ const cargarDashboard = async () => {
     }
 
     if (tipoFiltro.value === 'semana' && semana.value) {
-      params.append('semana', semana.value)
+      params.append('semana', `${semana.value}`)
     }
 
     if (tipoFiltro.value === 'mes' && mes.value) {
@@ -405,10 +331,7 @@ const cargarDashboard = async () => {
     const data = await fetchJSON<DashboardPrincipalResponse>(
       `http://localhost:3333/api/v1/dashboard/principal?${params}`,
     )
-
-    dashboardCards.value[0]!.value = data.kpis.totalRutas
-    dashboardCards.value[1]!.value = data.kpis.totalClientes
-    dashboardCards.value[2]!.value = data.kpis.totalDinero
+    vistaGeneral.value = data.vistaGeneral
 
     detalle.value = data.detalle
   } catch (error) {
@@ -416,14 +339,10 @@ const cargarDashboard = async () => {
   }
 }
 
-const abrirDetalle = (item: any) => {
-  detalleSeleccionado.value = item
+onMounted(async () => {
+  await cargarSemanas()
 
-  dialogDetalle.value = true
-}
-
-onMounted(() => {
-  cargarDashboard()
+  await cargarDashboard()
 })
 
 const headersTabla = computed(() => {
@@ -437,17 +356,29 @@ const headersTabla = computed(() => {
   }
 
   if (tipoFiltro.value === 'semana') {
-    headers.push({
-      title: 'Semana',
-      key: 'semana',
-    })
+    headers.push(
+      {
+        title: 'Semana',
+        key: 'semana',
+      },
+      {
+        title: 'Fecha',
+        key: 'fecha',
+      },
+    )
   }
 
   if (tipoFiltro.value === 'mes') {
-    headers.push({
-      title: 'Mes',
-      key: 'mes',
-    })
+    headers.push(
+      {
+        title: 'Mes',
+        key: 'mes',
+      },
+      {
+        title: 'Fecha',
+        key: 'fecha',
+      },
+    )
   }
 
   headers.push(
@@ -518,13 +449,15 @@ const headersTabla = computed(() => {
 
       <!-- FILTRO SEMANA -->
       <v-col v-if="tipoFiltro === 'semana'" cols="12" md="3">
-        <v-text-field
+        <v-select
           v-model="semana"
+          :items="semanas"
           label="Semana"
-          type="number"
-          min="1"
-          max="53"
-          @change="cargarDashboard"
+          prepend-inner-icon="mdi-calendar-week"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          @update:model-value="cargarDashboard"
         />
       </v-col>
 
@@ -569,6 +502,10 @@ const headersTabla = computed(() => {
           </v-card-subtitle>
 
           <v-data-table class="tabla-dashboard" :items="detalle" :headers="headersTabla">
+            <template #item.fecha="{ item }">
+              {{ item.fecha ? new Date(item.fecha).toLocaleDateString('es-CO') : '' }}
+            </template>
+
             <template #item.peso="{ item }">
               {{ Number(item.peso || 0).toLocaleString('es-CO') }} kg
             </template>
@@ -587,13 +524,13 @@ const headersTabla = computed(() => {
                 <v-row>
                   <v-col cols="12">
                     <v-btn-toggle v-model="tipoGrafico" mandatory color="primary">
-                      <v-btn value="clientes"> Clientes </v-btn>
+                      <v-btn value="clientes">Clientes</v-btn>
 
-                      <v-btn value="peso"> Peso </v-btn>
+                      <v-btn value="peso">Peso</v-btn>
 
-                      <v-btn value="valor"> Valor </v-btn>
+                      <v-btn value="valor">Valor</v-btn>
 
-                      <v-btn value="zona"> Zona </v-btn>
+                      <v-btn value="zona">Zona</v-btn>
                     </v-btn-toggle>
                   </v-col>
                 </v-row>
@@ -608,6 +545,20 @@ const headersTabla = computed(() => {
                   </v-col>
                 </v-row>
               </v-card-text>
+
+              <!-- BOTÓN CERRAR -->
+              <v-card-actions>
+                <v-spacer />
+
+                <v-btn
+                  variant="tonal"
+                  color="red"
+                  prepend-icon="mdi-close"
+                  @click="dialogDetalle = false"
+                >
+                  Cerrar
+                </v-btn>
+              </v-card-actions>
             </v-card>
           </v-dialog>
         </v-card>
@@ -653,36 +604,6 @@ const headersTabla = computed(() => {
   background: rgba(255, 255, 255, 0.15);
 
   flex-shrink: 0;
-}
-
-/* COLORES */
-.card-blue {
-  background: linear-gradient(135deg, #1565c0, #1e88e5);
-}
-
-.card-cyan {
-  background: linear-gradient(135deg, #00838f, #00acc1);
-}
-
-.card-purple {
-  background: linear-gradient(135deg, #6a1b9a, #8e24aa);
-}
-
-.card-orange {
-  background: linear-gradient(135deg, #ef6c00, #fb8c00);
-}
-
-.donut-center {
-  position: absolute;
-
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-
-  text-align: center;
-
-  pointer-events: none;
 }
 
 .tabla-dashboard :deep(thead th) {

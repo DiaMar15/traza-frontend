@@ -1,11 +1,9 @@
 <template>
   <v-app>
     <!-- HEADER -->
-    <HeaderWireframeComponent @toggle-drawer="drawer = !drawer" />
-
+    <HeaderWireframeComponent @toggle-drawer="toggleDrawer" />
     <!-- SIDEBAR -->
-    <SidebarWireframeComponent :drawer="drawer" />
-
+    <SidebarWireframeComponent :drawer="drawer" :fijado="drawerFijado" />
     <!-- CONTENIDO -->
     <v-main>
       <router-view />
@@ -25,12 +23,18 @@ const auth = authSetStore()
 // 🔥 RESPONSIVE
 const drawer = ref(window.innerWidth >= 1280)
 
+const drawerFijado = ref(false)
+const toggleDrawer = () => {
+  drawerFijado.value = !drawerFijado.value
+  drawer.value = drawerFijado.value
+}
+
 // 👤 USER GLOBAL
 const userData = computed(() => ({
   nombre: auth.user?.nombre || '',
   email: auth.user?.correo || '',
   roles: auth.user?.roles || [],
-  avatar: 'https://i.pravatar.cc/100?img=2',
+  avatar: auth.user?.avatar || '',
 }))
 
 provide('userData', userData)

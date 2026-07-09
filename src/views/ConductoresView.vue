@@ -368,7 +368,7 @@ onMounted(cargar)
     <!-- HEADER -->
     <div class="d-flex justify-space-between align-center mb-6">
       <div>
-        <h1 class="text-h4 font-weight-bold">Conductores</h1>
+        <h1 class="text-h4 font-weight-bold">Trabajadores Logisticos</h1>
 
         <p class="text-subtitle-2 text-medium-emphasis">Gestión de personal operativo</p>
       </div>
