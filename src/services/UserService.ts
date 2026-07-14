@@ -1,19 +1,15 @@
 const API = 'http://localhost:3333/api/v1/user_roles'
 
 export default class UserService {
-
   static async getAll({ page = 1, limit = 10, nombre = '' }) {
     const token = localStorage.getItem('token')
 
-    const response = await fetch(
-      `${API}?page=${page}&limit=${limit}&nombre=${nombre}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    )
+    const response = await fetch(`${API}?page=${page}&limit=${limit}&nombre=${nombre}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    })
 
     if (!response.ok) {
       throw new Error('Error al cargar los usuarios')

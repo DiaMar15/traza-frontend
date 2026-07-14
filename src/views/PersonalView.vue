@@ -103,6 +103,38 @@ const trabajadoresFiltrados = computed(() => {
   return trabajadores
 })
 
+const textoPeriodo = computed(() => {
+  const formatearFecha = (fecha?: string) => {
+    if (!fecha) {
+      return ''
+    }
+
+    const partes = fecha.split('/')
+
+    if (partes.length !== 3) {
+      return fecha
+    }
+
+    const [mes = '', dia = '', anio = ''] = partes
+
+    return `${dia.padStart(2, '0')}/${mes.padStart(2, '0')}/${anio}`
+  }
+
+  if (periodo.value === 'diario') {
+    return formatearFecha(data.value.fecha)
+  }
+
+  if (periodo.value === 'semanal') {
+    if (!data.value.fechaInicio || !data.value.fechaFin) {
+      return `Semana ${data.value.semana}`
+    }
+
+    return `Semana ${data.value.semana} • ${formatearFecha(data.value.fechaInicio)} al ${formatearFecha(data.value.fechaFin)}`
+  }
+
+  return data.value.mes || ''
+})
+
 /* ==========================
    CARGAR INFORMACIÓN
 ========================== */
@@ -271,8 +303,7 @@ watch(mes, (nuevoMes) => {
       @ver-horas-extra="mostrarHorasExtra = true"
     />
 
-    <PersonalTabla :trabajadores="trabajadoresFiltrados" />
-
+    <PersonalTabla :trabajadores="trabajadoresFiltrados" :periodo="textoPeriodo" />
     <!-- =======================
          MODALES
     ======================== -->
@@ -280,6 +311,7 @@ watch(mes, (nuevoMes) => {
     <PersonalDetalleModal
       v-model="mostrarNoCumplen"
       titulo="Trabajadores que NO cumplen la jornada laboral"
+      :periodo="textoPeriodo"
       :trabajadores="data.detalleNoCumplen || []"
       tipo="negativas"
     />
@@ -287,6 +319,7 @@ watch(mes, (nuevoMes) => {
     <PersonalDetalleModal
       v-model="mostrarHorasExtra"
       titulo="Trabajadores con horas extras"
+      :periodo="textoPeriodo"
       :trabajadores="data.detalleHorasExtra || []"
       tipo="extras"
     />

@@ -5,9 +5,13 @@
     v-model="internalDrawer"
     :permanent="isDesktop"
     :temporary="!isDesktop"
-    :rail="isDesktop ? rail : false"
+    :rail="isDesktop ? props.rail : false"
     :expand-on-hover="!props.fijado"
+    rail-width="72"
+    width="280"
     app
+    @mouseenter="abrirDrawer"
+    @mouseleave="cerrarDrawer"
   >
     <!-- 👤 USER -->
     <v-list>
@@ -17,8 +21,9 @@
             ? `http://localhost:3333/${userData.avatar}`
             : 'https://i.pravatar.cc/100?img=2'
         "
-        :title="userData?.nombre"
-        :subtitle="userData?.email"
+        :title="props.fijado ? userData?.nombre : ''"
+        :subtitle="props.fijado ? userData?.email : ''"
+        :class="{ 'justify-center': !props.fijado }"
       />
     </v-list>
 
@@ -99,16 +104,24 @@ const userData: any = inject('userData')
 // drawer
 const props = defineProps<{
   drawer: boolean
+  rail: boolean
   fijado: boolean
 }>()
-const internalDrawer = ref(props.drawer)
-const rail = ref(true)
 
-const drawerFijado = ref(false)
+const internalDrawer = ref(props.drawer)
+
 watch(
   () => props.drawer,
   (val) => {
     internalDrawer.value = val
+  },
+)
+watch(
+  () => props.fijado,
+  (fijado) => {
+    if (fijado) {
+      internalDrawer.value = true
+    }
   },
 )
 
@@ -140,7 +153,7 @@ const closeDrawer = () => {
 let timeout: number | null = null
 
 const abrirDrawer = () => {
-  if (!isDesktop.value) return
+  if (!isDesktop.value || props.fijado) return
 
   if (timeout) {
     clearTimeout(timeout)
@@ -158,7 +171,7 @@ const cancelarCerrar = () => {
 }
 
 const cerrarDrawer = () => {
-  if (!isDesktop.value) return
+  if (!isDesktop.value || props.fijado) return
 
   timeout = window.setTimeout(() => {
     internalDrawer.value = false
@@ -167,12 +180,6 @@ const cerrarDrawer = () => {
 
 const logout = () => {
   auth.logout()
-}
-
-const toggleRail = () => {
-  drawerFijado.value = !drawerFijado.value
-
-  rail.value = !drawerFijado.value
 }
 </script>
 
@@ -188,5 +195,9 @@ const toggleRail = () => {
   width: 12px;
   height: 100vh;
   z-index: 9998;
+}
+
+.v-list:first-child {
+  margin-bottom: 10px;
 }
 </style>

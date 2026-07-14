@@ -12,6 +12,7 @@ interface Trabajador {
 interface Props {
   modelValue: boolean
   titulo: string
+  periodo?: string
   trabajadores: Trabajador[]
   tipo: 'extras' | 'negativas'
 }
@@ -73,10 +74,16 @@ function colorCargo(cargo: string) {
 <template>
   <v-dialog :model-value="modelValue" max-width="950" @update:model-value="cerrar">
     <v-card rounded="xl">
-      <v-card-title class="d-flex align-center justify-space-between">
-        <span class="text-h6 font-weight-bold">
-          {{ titulo }}
-        </span>
+      <v-card-title class="d-flex justify-space-between align-start">
+        <div>
+          <div class="text-h6 font-weight-bold">
+            {{ titulo }}
+          </div>
+
+          <div v-if="props.periodo" class="text-subtitle-2 text-grey mt-1">
+            {{ props.periodo }}
+          </div>
+        </div>
 
         <v-btn icon="mdi-close" variant="text" @click="cerrar" />
       </v-card-title>
@@ -107,7 +114,7 @@ function colorCargo(cargo: string) {
           items-per-page="10"
         >
           <template #item.cargo="{ item }">
-            <v-chip :color="colorCargo(item.cargo)" size="small" variant="tonal">
+            <v-chip :color="colorCargo(item.cargo)" size="small" variant="flat" class="text-black">
               {{ item.cargo }}
             </v-chip>
           </template>
@@ -115,11 +122,11 @@ function colorCargo(cargo: string) {
           <template #item.horas="{ item }"> {{ item.horas }} h </template>
 
           <template #item.valor="{ item }">
-            <v-chip v-if="tipo === 'extras'" color="deep-purple" variant="tonal">
+            <v-chip v-if="tipo === 'extras'" color="yellow" variant="flat">
               +{{ item.extras }} h
             </v-chip>
 
-            <v-chip v-else color="red" variant="tonal"> -{{ item.negativas }} h </v-chip>
+            <v-chip v-else color="red" variant="flat"> -{{ item.negativas }} h </v-chip>
           </template>
         </v-data-table>
       </v-card-text>

@@ -10,10 +10,10 @@ interface Trabajador {
 
 interface Props {
   trabajadores: Trabajador[]
+  periodo?: string
 }
 
-defineProps<Props>()
-
+const props = defineProps<Props>()
 const headers = [
   {
     title: 'Trabajador',
@@ -28,15 +28,15 @@ const headers = [
     key: 'rutas',
   },
   {
-    title: 'Horas',
+    title: 'Horas trabajadas',
     key: 'horas',
   },
   {
-    title: 'Horas extras',
+    title: 'Extras',
     key: 'extras',
   },
   {
-    title: 'Horas faltantes',
+    title: 'Faltantes',
     key: 'negativas',
   },
 ]
@@ -56,10 +56,18 @@ function colorCargo(cargo: string) {
 
 <template>
   <v-card rounded="xl" elevation="6" class="mt-5">
-    <v-card-title class="d-flex align-center justify-space-between">
-      <span class="text-h6 font-weight-bold"> Personal operativo </span>
+    <v-card-title class="d-flex justify-space-between align-start">
+      <div>
+        <div class="text-h6 font-weight-bold">Personal operativo</div>
 
-      <v-chip color="primary" variant="tonal"> {{ trabajadores.length }} trabajadores </v-chip>
+        <div v-if="props.periodo" class="text-subtitle-2 text-grey-darken-1 mt-1">
+          {{ props.periodo }}
+        </div>
+      </div>
+
+      <v-chip color="primary" variant="tonal">
+        {{ props.trabajadores.length }} trabajadores
+      </v-chip>
     </v-card-title>
 
     <v-divider />

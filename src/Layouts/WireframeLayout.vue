@@ -2,8 +2,8 @@
   <v-app>
     <!-- HEADER -->
     <HeaderWireframeComponent @toggle-drawer="toggleDrawer" />
-    <!-- SIDEBAR -->
-    <SidebarWireframeComponent :drawer="drawer" :fijado="drawerFijado" />
+
+    <SidebarWireframeComponent :drawer="drawer" :rail="rail" :fijado="drawerFijado" />
     <!-- CONTENIDO -->
     <v-main>
       <router-view />
@@ -22,13 +22,16 @@ const auth = authSetStore()
 
 // 🔥 RESPONSIVE
 const drawer = ref(window.innerWidth >= 1280)
-
+const rail = ref(true)
 const drawerFijado = ref(false)
+
 const toggleDrawer = () => {
   drawerFijado.value = !drawerFijado.value
-  drawer.value = drawerFijado.value
-}
 
+  drawer.value = true
+
+  rail.value = !drawerFijado.value
+}
 // 👤 USER GLOBAL
 const userData = computed(() => ({
   nombre: auth.user?.nombre || '',

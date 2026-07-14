@@ -2,13 +2,41 @@
 import { computed, onMounted, ref } from 'vue'
 import UsuariosService, { type Usuario } from '@/services/usuariosService'
 
-const usuariosService = new UsuariosService()
-
 const loading = ref(false)
 
 const busqueda = ref('')
 
 const usuarios = ref<Usuario[]>([])
+
+const dialogConfirmar = ref(false)
+
+const usuarioSeleccionado = ref<Usuario | null>(null)
+
+const dialogo = ref(false)
+
+const dialogoTitulo = ref('')
+
+const dialogoMensaje = ref('')
+
+const dialogoColor = ref<'success' | 'error'>('success')
+
+const dialogoIcono = ref('')
+
+const dialogEditar = ref(false)
+
+const editando = ref(false)
+
+const form = ref({
+  id: null as number | null,
+
+  nombre: '',
+
+  apellido: '',
+
+  correo: '',
+
+  numero_telefono: '',
+})
 
 const headers = [
   {
@@ -22,6 +50,10 @@ const headers = [
   {
     title: 'Teléfono',
     key: 'numero_telefono',
+  },
+  {
+    title: 'Estado',
+    key: 'estado',
   },
   {
     title: 'Registro',
@@ -63,19 +95,170 @@ async function cargarUsuarios() {
   try {
     loading.value = true
 
-    usuarios.value = await usuariosService.obtenerUsuarios()
+    usuarios.value = await UsuariosService.obtenerUsuarios()
   } catch (error) {
     console.error(error)
   } finally {
     loading.value = false
   }
 }
+
 function editarUsuario(usuario: Usuario) {
-  console.log('Editar usuario:', usuario)
+  editando.value = true
+
+  form.value = {
+    id: usuario.id,
+
+    nombre: usuario.nombre,
+
+    apellido: usuario.apellido || '',
+
+    correo: usuario.correo,
+
+    numero_telefono: usuario.numero_telefono || '',
+  }
+
+  dialogEditar.value = true
 }
 
-function eliminarUsuario(usuario: Usuario) {
-  console.log('Eliminar usuario:', usuario)
+async function guardarUsuario() {
+  try {
+    if (!form.value.id) {
+      return
+    }
+
+    const data = {
+      nombre: form.value.nombre.trim(),
+
+      apellido: form.value.apellido.trim(),
+
+      correo: form.value.correo.trim(),
+
+      numero_telefono: form.value.numero_telefono.trim(),
+    }
+
+    await UsuariosService.update(form.value.id, data)
+
+    cerrarDialogEditar()
+
+    await cargarUsuarios()
+
+    dialogoTitulo.value = 'Usuario actualizado'
+
+    dialogoMensaje.value = 'El usuario fue actualizado correctamente.'
+
+    dialogoColor.value = 'success'
+
+    dialogoIcono.value = 'mdi-check-circle'
+
+    dialogo.value = true
+  } catch (error) {
+    console.error(error)
+
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = 'No fue posible actualizar el usuario.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
+  }
+}
+
+function inactivarUsuario(usuario: Usuario) {
+  usuarioSeleccionado.value = usuario
+
+  dialogConfirmar.value = true
+}
+
+function cerrarDialogEditar() {
+  dialogEditar.value = false
+
+  form.value = {
+    id: null,
+
+    nombre: '',
+
+    apellido: '',
+
+    correo: '',
+
+    numero_telefono: '',
+  }
+
+  editando.value = false
+}
+
+async function reactivarUsuario(usuario: Usuario) {
+  try {
+    await UsuariosService.reactivar(usuario.id)
+
+    await cargarUsuarios()
+
+    usuarioSeleccionado.value = null
+
+    dialogoTitulo.value = 'Usuario reactivado'
+
+    dialogoMensaje.value = 'El usuario fue reactivado correctamente.'
+
+    dialogoColor.value = 'success'
+
+    dialogoIcono.value = 'mdi-account-check'
+
+    dialogo.value = true
+  } catch (error) {
+    console.error(error)
+
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = 'No fue posible reactivar el usuario.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
+  }
+}
+
+async function confirmarInactivacion() {
+  if (!usuarioSeleccionado.value) return
+
+  try {
+    await UsuariosService.inactivar(usuarioSeleccionado.value.id)
+
+    dialogConfirmar.value = false
+
+    await cargarUsuarios()
+
+    usuarioSeleccionado.value = null
+
+    dialogoTitulo.value = 'Usuario inactivado'
+
+    dialogoMensaje.value = 'El usuario fue inactivado correctamente.'
+
+    dialogoColor.value = 'success'
+
+    dialogoIcono.value = 'mdi-account-off'
+
+    dialogo.value = true
+  } catch (error) {
+    console.error(error)
+
+    dialogConfirmar.value = false
+
+    dialogoTitulo.value = 'Error'
+
+    dialogoMensaje.value = 'No fue posible inactivar el usuario.'
+
+    dialogoColor.value = 'error'
+
+    dialogoIcono.value = 'mdi-alert-circle'
+
+    dialogo.value = true
+  }
 }
 onMounted(() => {
   cargarUsuarios()
@@ -84,6 +267,10 @@ onMounted(() => {
 
 <template>
   <v-container fluid>
+    <!-- ==========================================
+         TARJETAS
+    ========================================== -->
+
     <v-row class="mb-3">
       <v-col cols="12" md="4">
         <v-card color="primary" density="compact" height="75">
@@ -121,6 +308,11 @@ onMounted(() => {
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- ==========================================
+         TABLA
+    ========================================== -->
+
     <v-card>
       <v-card-title class="d-flex justify-space-between align-center flex-wrap ga-3">
         <span class="text-h5"> Usuarios </span>
@@ -148,6 +340,16 @@ onMounted(() => {
           {{ item.numero_telefono || '-' }}
         </template>
 
+        <template #item.estado="{ item }">
+          <v-chip
+            :color="item.estado === 'ACTIVO' ? 'success' : 'error'"
+            size="small"
+            variant="flat"
+          >
+            {{ item.estado }}
+          </v-chip>
+        </template>
+
         <template #item.created_at="{ item }">
           {{ new Date(item.created_at).toLocaleDateString('es-CO') }}
         </template>
@@ -156,10 +358,110 @@ onMounted(() => {
           <div class="d-flex ga-2">
             <v-btn icon="mdi-pencil" size="small" color="primary" @click="editarUsuario(item)" />
 
-            <v-btn icon="mdi-delete" size="small" color="error" @click="eliminarUsuario(item)" />
+            <v-btn
+              v-if="item.estado === 'ACTIVO'"
+              icon="mdi-account-off"
+              size="small"
+              color="error"
+              @click="inactivarUsuario(item)"
+            />
+
+            <v-btn
+              v-else
+              icon="mdi-account-check"
+              size="small"
+              color="success"
+              @click="reactivarUsuario(item)"
+            />
           </div>
         </template>
       </v-data-table>
     </v-card>
+
+    <v-dialog v-model="dialogEditar" max-width="800">
+      <v-card>
+        <v-card-title class="bg-primary text-white">
+          <v-icon class="me-2"> mdi-account-edit </v-icon>
+
+          Editar Usuario
+        </v-card-title>
+
+        <v-card-text>
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-text-field v-model="form.nombre" label="Nombre" />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-text-field v-model="form.apellido" label="Apellido" />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-text-field v-model="form.correo" label="Correo" type="email" />
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-text-field v-model="form.numero_telefono" label="Teléfono" />
+            </v-col>
+          </v-row>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn @click="cerrarDialogEditar"> Cancelar </v-btn>
+
+          <v-btn
+            color="success"
+            :disabled="!form.nombre.trim() || !form.correo.trim()"
+            @click="guardarUsuario"
+          >
+            Guardar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ==========================================
+         CONFIRMAR INACTIVACIÓN
+    ========================================== -->
+
+    <v-dialog v-model="dialogConfirmar" max-width="450">
+      <v-card rounded="xl">
+        <v-card-title class="text-h6"> Confirmar acción </v-card-title>
+
+        <v-card-text> ¿Deseas inactivar este usuario? </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+
+          <v-btn @click="dialogConfirmar = false"> Cancelar </v-btn>
+
+          <v-btn color="error" @click="confirmarInactivacion"> Inactivar </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- ==========================================
+         MENSAJE
+    ========================================== -->
+
+    <v-dialog v-model="dialogo" max-width="450">
+      <v-card rounded="xl">
+        <v-card-text class="text-center pa-8">
+          <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
+
+          <div class="text-h5 font-weight-bold mb-2">
+            {{ dialogoTitulo }}
+          </div>
+
+          <div class="text-body-1">
+            {{ dialogoMensaje }}
+          </div>
+
+          <v-btn class="mt-6" :color="dialogoColor" @click="dialogo = false"> Aceptar </v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
