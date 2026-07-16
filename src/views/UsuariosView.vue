@@ -266,14 +266,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <v-container fluid>
+  <v-container fluid class="pa-4 pa-md-6">
     <!-- ==========================================
          TARJETAS
     ========================================== -->
 
     <v-row class="mb-3">
-      <v-col cols="12" md="4">
-        <v-card color="primary" density="compact" height="75">
+      <v-col cols="12" sm="6" xl="4">
+        <v-card color="primary" density="compact" height="80" rounded="xl" elevation="6">
           <v-card-text class="d-flex flex-column justify-center h-100 py-2">
             <div class="text-caption">Total Usuarios</div>
 
@@ -284,8 +284,8 @@ onMounted(() => {
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
-        <v-card color="success" density="compact" height="75">
+      <v-col cols="12" sm="6" xl="4">
+        <v-card color="success" density="compact" height="80" rounded="xl" elevation="6">
           <v-card-text class="d-flex flex-column justify-center h-100 py-2">
             <div class="text-caption">Con Teléfono</div>
 
@@ -296,8 +296,8 @@ onMounted(() => {
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
-        <v-card color="info" density="compact" height="75">
+      <v-col cols="12" sm="6" xl="4">
+        <v-card color="info" density="compact" height="80" rounded="xl" elevation="6">
           <v-card-text class="d-flex flex-column justify-center h-100 py-2">
             <div class="text-caption">Registrados</div>
 
@@ -314,7 +314,9 @@ onMounted(() => {
     ========================================== -->
 
     <v-card>
-      <v-card-title class="d-flex justify-space-between align-center flex-wrap ga-3">
+      <v-card-title
+        class="d-flex flex-column flex-lg-row justify-space-between align-lg-center ga-4"
+      >
         <span class="text-h5"> Usuarios </span>
 
         <v-text-field
@@ -324,61 +326,63 @@ onMounted(() => {
           variant="outlined"
           density="comfortable"
           hide-details
-          style="width: 300px"
+          style="min-width: 240px; max-width: 300px"
         />
       </v-card-title>
 
-      <v-data-table :headers="headers" :items="usuariosFiltrados" :loading="loading">
-        <template #item.nombreCompleto="{ item }">
-          <strong>
-            {{ item.nombre }}
-            {{ item.apellido || '' }}
-          </strong>
-        </template>
+      <div class="overflow-x-auto">
+        <v-data-table :headers="headers" :items="usuariosFiltrados" :loading="loading">
+          <template #item.nombreCompleto="{ item }">
+            <strong>
+              {{ item.nombre }}
+              {{ item.apellido || '' }}
+            </strong>
+          </template>
 
-        <template #item.numero_telefono="{ item }">
-          {{ item.numero_telefono || '-' }}
-        </template>
+          <template #item.numero_telefono="{ item }">
+            {{ item.numero_telefono || '-' }}
+          </template>
 
-        <template #item.estado="{ item }">
-          <v-chip
-            :color="item.estado === 'ACTIVO' ? 'success' : 'error'"
-            size="small"
-            variant="flat"
-          >
-            {{ item.estado }}
-          </v-chip>
-        </template>
-
-        <template #item.created_at="{ item }">
-          {{ new Date(item.created_at).toLocaleDateString('es-CO') }}
-        </template>
-
-        <template #item.acciones="{ item }">
-          <div class="d-flex ga-2">
-            <v-btn icon="mdi-pencil" size="small" color="primary" @click="editarUsuario(item)" />
-
-            <v-btn
-              v-if="item.estado === 'ACTIVO'"
-              icon="mdi-account-off"
+          <template #item.estado="{ item }">
+            <v-chip
+              :color="item.estado === 'ACTIVO' ? 'success' : 'error'"
               size="small"
-              color="error"
-              @click="inactivarUsuario(item)"
-            />
+              variant="flat"
+            >
+              {{ item.estado }}
+            </v-chip>
+          </template>
 
-            <v-btn
-              v-else
-              icon="mdi-account-check"
-              size="small"
-              color="success"
-              @click="reactivarUsuario(item)"
-            />
-          </div>
-        </template>
-      </v-data-table>
+          <template #item.created_at="{ item }">
+            {{ new Date(item.created_at).toLocaleDateString('es-CO') }}
+          </template>
+
+          <template #item.acciones="{ item }">
+            <div class="d-flex justify-center ga-2">
+              <v-btn icon="mdi-pencil" size="small" color="primary" @click="editarUsuario(item)" />
+
+              <v-btn
+                v-if="item.estado === 'ACTIVO'"
+                icon="mdi-account-off"
+                size="small"
+                color="error"
+                @click="inactivarUsuario(item)"
+              />
+
+              <v-btn
+                v-else
+                icon="mdi-account-check"
+                size="small"
+                color="success"
+                @click="reactivarUsuario(item)"
+              />
+            </div>
+          </template>
+        </v-data-table>
+      </div>
     </v-card>
 
-    <v-dialog v-model="dialogEditar" max-width="800">
+    <v-dialog v-model="dialogEditar" width="95%" max-width="800" persistent>
       <v-card>
         <v-card-title class="bg-primary text-white">
           <v-icon class="me-2"> mdi-account-edit </v-icon>
@@ -389,19 +393,23 @@ onMounted(() => {
         <v-card-text>
           <v-row>
             <v-col cols="12" md="6">
-              <v-text-field v-model="form.nombre" label="Nombre" />
+              <v-text-field variant="outlined" density="comfortable" /> v-model="form.nombre"
+              label="Nombre" />
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field v-model="form.apellido" label="Apellido" />
+              <v-text-field variant="outlined" density="comfortable" /> v-model="form.apellido"
+              label="Apellido" />
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field v-model="form.correo" label="Correo" type="email" />
+              <v-text-field variant="outlined" density="comfortable" /> v-model="form.correo"
+              label="Correo" type="email" />
             </v-col>
 
             <v-col cols="12" md="6">
-              <v-text-field v-model="form.numero_telefono" label="Teléfono" />
+              <v-text-field variant="outlined" density="comfortable" />
+              v-model="form.numero_telefono" label="Teléfono" />
             </v-col>
           </v-row>
         </v-card-text>
@@ -409,10 +417,12 @@ onMounted(() => {
         <v-card-actions>
           <v-spacer />
 
-          <v-btn @click="cerrarDialogEditar"> Cancelar </v-btn>
+          <v-btn variant="text" @click="cerrarDialogEditar"> Cancelar </v-btn>
 
           <v-btn
             color="success"
+            size="large"
+            rounded="lg"
             :disabled="!form.nombre.trim() || !form.correo.trim()"
             @click="guardarUsuario"
           >
@@ -426,7 +436,7 @@ onMounted(() => {
          CONFIRMAR INACTIVACIÓN
     ========================================== -->
 
-    <v-dialog v-model="dialogConfirmar" max-width="450">
+    <v-dialog v-model="dialogConfirmar" max-width="450" persistent>
       <v-card rounded="xl">
         <v-card-title class="text-h6"> Confirmar acción </v-card-title>
 
@@ -437,7 +447,9 @@ onMounted(() => {
 
           <v-btn @click="dialogConfirmar = false"> Cancelar </v-btn>
 
-          <v-btn color="error" @click="confirmarInactivacion"> Inactivar </v-btn>
+          <v-btn color="error" size="large" rounded="lg" @click="confirmarInactivacion">
+            Inactivar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -446,7 +458,7 @@ onMounted(() => {
          MENSAJE
     ========================================== -->
 
-    <v-dialog v-model="dialogo" max-width="450">
+    <v-dialog v-model="dialogo" max-width="450" persistent>
       <v-card rounded="xl">
         <v-card-text class="text-center pa-8">
           <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
@@ -459,9 +471,36 @@ onMounted(() => {
             {{ dialogoMensaje }}
           </div>
 
-          <v-btn class="mt-6" :color="dialogoColor" @click="dialogo = false"> Aceptar </v-btn>
+          <v-btn
+            class="mt-6 text-none"
+            :color="dialogoColor"
+            size="large"
+            rounded="lg"
+            @click="dialogo = false"
+          >
+            Aceptar
+          </v-btn>
         </v-card-text>
       </v-card>
     </v-dialog>
   </v-container>
 </template>
+<style scoped>
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-usuarios {
+  min-width: 950px;
+}
+
+.tabla-usuarios :deep(thead th) {
+  background-color: #2563eb !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+.tabla-usuarios :deep(thead tr) {
+  background-color: #2563eb !important;
+}
+</style>

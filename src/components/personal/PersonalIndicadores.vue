@@ -19,9 +19,9 @@ const emit = defineEmits<{
          CUMPLEN JORNADA
     =========================== -->
 
-    <v-col cols="12" sm="6" lg>
-      <v-card class="indicador-card card-green" elevation="4" rounded="xl">
-        <v-icon size="24">mdi-check-circle</v-icon>
+    <v-col cols="12" sm="6" lg="4" xl>
+      <v-card class="indicador-card card-green" elevation="6" rounded="xl">
+        <v-icon size="28" class="mb-2">mdi-check-circle</v-icon>
 
         <div class="titulo">Trabajadores que cumplen la jornada laboral</div>
 
@@ -37,14 +37,15 @@ const emit = defineEmits<{
          NO CUMPLEN
     =========================== -->
 
-    <v-col cols="12" sm="6" lg>
+    <v-col cols="12" sm="6" lg="4" xl>
       <v-card
         class="indicador-card indicador-click card-red"
-        elevation="4"
+        elevation="6"
         rounded="xl"
+        ripple
         @click="emit('verNoCumplen')"
       >
-        <v-icon size="24">mdi-close-circle</v-icon>
+        <v-icon size="28" class="mb-2">mdi-close-circle</v-icon>
 
         <div class="titulo">Trabajadores que NO cumplen la jornada laboral</div>
 
@@ -60,14 +61,15 @@ const emit = defineEmits<{
          HORAS EXTRA
     =========================== -->
 
-    <v-col cols="12" sm="6" lg>
+    <v-col cols="12" sm="6" lg="4" xl>
       <v-card
         class="indicador-card indicador-click card-purple"
-        elevation="4"
+        elevation="6"
         rounded="xl"
+        ripple
         @click="emit('verHorasExtra')"
       >
-        <v-icon size="24">mdi-clock-plus</v-icon>
+        <v-icon size="28" class="mb-2"> mdi-clock-plus </v-icon>
 
         <div class="titulo">Trabajadores con horas extras</div>
 
@@ -85,7 +87,7 @@ const emit = defineEmits<{
 
     <v-col cols="12" sm="6" lg>
       <v-card class="indicador-card card-blue" elevation="4" rounded="xl">
-        <v-icon size="24">mdi-clock-outline</v-icon>
+        <v-icon size="28" class="mb-2">mdi-clock-outline</v-icon>
 
         <div class="titulo">Horas trabajadas</div>
 
@@ -101,7 +103,7 @@ const emit = defineEmits<{
 
     <v-col cols="12" sm="6" lg>
       <v-card class="indicador-card card-indigo" elevation="4" rounded="xl">
-        <v-icon size="24">mdi-chart-line</v-icon>
+        <v-icon size="28" class="mb-2"> mdi-chart-line</v-icon>
 
         <div class="titulo">Promedio</div>
 
@@ -115,22 +117,27 @@ const emit = defineEmits<{
 
 <style scoped>
 .indicador-card {
-  min-height: 75px;
-  padding: 10px 12px;
+  min-height: 145px;
+
+  padding: 18px;
 
   display: flex;
+
   flex-direction: column;
+
   justify-content: center;
+
   align-items: center;
 
   text-align: center;
+
   color: white;
 
-  transition: all 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .indicador-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-4px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
@@ -146,7 +153,7 @@ const emit = defineEmits<{
   margin-top: 4px;
   min-height: 24px;
 
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   font-weight: 600;
   line-height: 1.15;
 }
@@ -154,13 +161,13 @@ const emit = defineEmits<{
 .numero {
   margin: 4px 0;
 
-  font-size: 1.45rem;
+  font-size: 1.75rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .subtitulo {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   opacity: 0.9;
 }
 
@@ -191,20 +198,21 @@ const emit = defineEmits<{
 
 @media (max-width: 960px) {
   .indicador-card {
-    min-height: 90px;
+    min-height: 120px;
+    padding: 14px;
   }
 
   .numero {
-    font-size: 1.3rem;
+    font-size: 1.45rem;
   }
 
   .titulo {
     min-height: auto;
-    font-size: 0.7rem;
+    font-size: 0.74rem;
   }
 
   .subtitulo {
-    font-size: 0.65rem;
+    font-size: 0.7rem;
   }
 }
 </style>

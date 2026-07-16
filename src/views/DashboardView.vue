@@ -53,7 +53,7 @@ import {
   Legend,
 } from 'chart.js'
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ChartDataLabels)
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ChartDataLabels)
 
 type DashboardPrincipalResponse = {
   vistaGeneral: boolean
@@ -394,12 +394,19 @@ const headersTabla = computed(() => {
 </script>
 
 <template>
-  <v-container>
+  <v-container fluid class="pa-4 pa-md-6">
     <!-- ENCABEZADO -->
-    <div class="d-flex justify-space-between align-center mb-4">
+    <div class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-3 mb-5">
       <h2 class="text-h5 font-weight-bold">Dashboard Logístico</h2>
 
-      <v-btn color="success" prepend-icon="mdi-sync" :loading="loading" @click="syncRutas">
+      <v-btn
+        color="success"
+        prepend-icon="mdi-sync"
+        :loading="loading"
+        size="large"
+        class="text-none"
+        @click="syncRutas"
+      >
         Sincronizar Google Sheets
       </v-btn>
     </div>
@@ -426,9 +433,10 @@ const headersTabla = computed(() => {
       </v-card>
     </v-dialog>
 
-    <v-row class="mb-4">
-      <v-col cols="12">
+    <v-row class="mb-6" align="center">
+      <v-col cols="12" lg="8">
         <v-btn-toggle
+          class="flex-wrap"
           v-model="tipoFiltro"
           mandatory
           color="primary"
@@ -443,12 +451,21 @@ const headersTabla = computed(() => {
       </v-col>
 
       <!-- FILTRO DÍA -->
-      <v-col v-if="tipoFiltro === 'dia'" cols="12" md="3">
-        <v-text-field v-model="fecha" type="date" label="Fecha" @change="cargarDashboard" />
+      <v-col v-if="tipoFiltro === 'dia'" cols="12" sm="6" md="4" lg="3">
+        <v-text-field
+          v-model="fecha"
+          type="date"
+          label="Fecha"
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          prepend-inner-icon="mdi-calendar"
+          @change="cargarDashboard"
+        />
       </v-col>
 
       <!-- FILTRO SEMANA -->
-      <v-col v-if="tipoFiltro === 'semana'" cols="12" md="3">
+      <v-col v-if="tipoFiltro === 'semana'" cols="12" sm="6" md="4" lg="3">
         <v-select
           v-model="semana"
           :items="semanas"
@@ -462,7 +479,7 @@ const headersTabla = computed(() => {
       </v-col>
 
       <!-- FILTRO MES -->
-      <v-col v-if="tipoFiltro === 'mes'" cols="12" md="3">
+      <v-col v-if="tipoFiltro === 'mes'" cols="12" sm="6" md="4" lg="3">
         <v-select
           v-model="mes"
           label="Mes"
@@ -480,6 +497,10 @@ const headersTabla = computed(() => {
             'NOVIEMBRE',
             'DICIEMBRE',
           ]"
+          prepend-inner-icon="mdi-calendar-month"
+          variant="outlined"
+          density="comfortable"
+          hide-details
           @update:model-value="cargarDashboard"
         />
       </v-col>
@@ -516,14 +537,14 @@ const headersTabla = computed(() => {
             </template>
           </v-data-table>
 
-          <v-dialog v-model="dialogDetalle" max-width="1700" height="90vh">
+          <v-dialog v-model="dialogDetalle" width="95%" max-width="1500" max-height="90vh">
             <v-card rounded="xl">
               <v-card-title class="text-h5"> Analisis Operativo </v-card-title>
 
               <v-card-text>
                 <v-row>
                   <v-col cols="12">
-                    <v-btn-toggle v-model="tipoGrafico" mandatory color="primary">
+                    <v-btn-toggle class="flex-wrap" v-model="tipoGrafico" mandatory color="primary">
                       <v-btn value="clientes">Clientes</v-btn>
 
                       <v-btn value="peso">Peso</v-btn>
@@ -537,8 +558,8 @@ const headersTabla = computed(() => {
 
                 <v-row class="mt-4">
                   <v-col cols="12">
-                    <v-card rounded="xl" elevation="6" class="pa-4" min-height="600">
-                      <div style="height: 500px">
+                    <v-card rounded="xl" elevation="6" class="pa-4" min-height="520">
+                      <div class="chart-wrapper">
                         <Bar :data="graficoActual" :options="chartOptions" />
                       </div>
                     </v-card>
@@ -567,45 +588,6 @@ const headersTabla = computed(() => {
   </v-container>
 </template>
 <style scoped>
-/* KPI */
-.dashboard-card {
-  transition: 0.3s;
-  color: white;
-}
-
-.dashboard-card:hover {
-  transform: translateY(-4px);
-}
-
-.chart-container {
-  height: 350px;
-}
-
-.compact-card {
-  min-height: 88px;
-
-  padding: 14px 16px;
-
-  display: flex;
-  align-items: center;
-}
-
-/* ICONOS */
-.icon-box {
-  width: 36px;
-  height: 36px;
-
-  border-radius: 12px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: rgba(255, 255, 255, 0.15);
-
-  flex-shrink: 0;
-}
-
 .tabla-dashboard :deep(thead th) {
   background-color: #0f77ff !important;
   color: white !important;
@@ -614,5 +596,21 @@ const headersTabla = computed(() => {
 
 .tabla-dashboard :deep(thead tr) {
   background-color: #3b64e7 !important;
+}
+
+.chart-wrapper {
+  height: 500px;
+}
+
+@media (max-width: 1280px) {
+  .chart-wrapper {
+    height: 420px;
+  }
+}
+
+@media (max-width: 960px) {
+  .chart-wrapper {
+    height: 360px;
+  }
 }
 </style>

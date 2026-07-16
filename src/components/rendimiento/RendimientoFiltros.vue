@@ -37,23 +37,28 @@ const periodos = [
 </script>
 
 <template>
-  <v-row class="mb-5">
-    <v-col cols="12" md="3">
+  <v-row class="mb-6" align="center">
+    <v-col cols="12" sm="6" md="4" lg="3">
       <v-select
         v-model="periodo"
         :items="['diario', 'semanal', 'mensual']"
         label="Período"
         prepend-inner-icon="mdi-calendar-range"
+        variant="outlined"
+        density="comfortable"
         hide-details
       />
     </v-col>
 
-    <v-col cols="12" md="3">
+    <v-col cols="12" sm="6" md="4" lg="3">
       <v-text-field
         v-if="periodo === 'diario'"
         v-model="dia"
         type="date"
         label="Fecha"
+        prepend-inner-icon="mdi-calendar"
+        variant="outlined"
+        density="comfortable"
         hide-details
       />
 
@@ -63,6 +68,8 @@ const periodos = [
         :items="semanas"
         label="Semana"
         prepend-inner-icon="mdi-calendar-week"
+        variant="outlined"
+        density="comfortable"
         hide-details
       />
 
@@ -72,6 +79,8 @@ const periodos = [
         :items="meses"
         label="Mes"
         prepend-inner-icon="mdi-calendar-month"
+        variant="outlined"
+        density="comfortable"
         hide-details
       />
     </v-col>

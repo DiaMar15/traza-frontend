@@ -70,24 +70,61 @@ function cerrarDialogo() {
 </script>
 
 <template>
-  <v-card class="pa-6" elevation="8">
-    <h2 class="text-center mb-4">Registro</h2>
+  <v-card class="pa-6 pa-md-8" rounded="xl" elevation="10">
+    <div class="text-center mb-6">
+      <v-icon size="48" color="primary" class="mb-2"> mdi-account-plus </v-icon>
+
+      <h2 class="text-h4 font-weight-bold">Crear cuenta</h2>
+
+      <div class="text-medium-emphasis mt-2">
+        Completa la información para registrarte en el sistema.
+      </div>
+    </div>
 
     <v-form @submit.prevent="register">
-      <v-text-field v-model="nombre" label="Nombre" required />
-      <v-text-field v-model="correo" label="Correo" type="email" required />
-      <v-text-field v-model="password" label="Contraseña" type="password" required />
+      <v-text-field
+        v-model="nombre"
+        label="Nombre"
+        prepend-inner-icon="mdi-account-outline"
+        variant="outlined"
+        density="comfortable"
+        class="mb-3"
+        required
+      />
 
-      <v-btn type="submit" color="purple" block> Registrarse </v-btn>
+      <v-text-field
+        v-model="correo"
+        label="Correo electrónico"
+        type="email"
+        prepend-inner-icon="mdi-email-outline"
+        variant="outlined"
+        density="comfortable"
+        class="mb-3"
+        required
+      />
+
+      <v-text-field
+        v-model="password"
+        label="Contraseña"
+        type="password"
+        prepend-inner-icon="mdi-lock-outline"
+        variant="outlined"
+        density="comfortable"
+        class="mb-4"
+        required
+      />
+
+      <v-btn type="submit" color="primary" block size="large" rounded="lg"> Registrarse </v-btn>
     </v-form>
 
-    <div class="text-center mt-4">
-      <a @click="router.push('/auth/login')" style="cursor: pointer">
+    <div class="text-center mt-5">
+      <a class="text-decoration-none" style="cursor: pointer" @click="router.push('/auth/login')">
         ¿Ya tienes cuenta? Inicia sesión
       </a>
     </div>
   </v-card>
-  <v-dialog v-model="dialogo" max-width="450">
+
+  <v-dialog v-model="dialogo" max-width="450" persistent>
     <v-card rounded="xl">
       <v-card-text class="text-center pa-8">
         <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
@@ -100,7 +137,15 @@ function cerrarDialogo() {
           {{ dialogoMensaje }}
         </div>
 
-        <v-btn class="mt-6" :color="dialogoColor" @click="cerrarDialogo"> Aceptar </v-btn>
+        <v-btn
+          class="mt-6 text-none"
+          :color="dialogoColor"
+          size="large"
+          rounded="lg"
+          @click="cerrarDialogo"
+        >
+          Aceptar
+        </v-btn>
       </v-card-text>
     </v-card>
   </v-dialog>

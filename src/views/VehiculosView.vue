@@ -440,8 +440,8 @@ onMounted(cargarVehiculos)
 <template>
   <v-container fluid>
     <v-row class="mb-3">
-      <v-col cols="12" md="4">
-        <v-card color="primary" density="compact" height="75">
+      <v-col cols="12" sm="6" xl="4">
+        <v-card color="primary" density="compact" height="80" rounded="xl" elevation="6">
           <v-card-text class="d-flex flex-column justify-center h-100 py-2">
             <div class="text-caption">Total Vehículos</div>
 
@@ -452,8 +452,8 @@ onMounted(cargarVehiculos)
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
-        <v-card color="success" density="compact" height="75">
+      <v-col cols="12" sm="6" xl="4">
+        <v-card color="success" density="compact" height="80" rounded="xl" elevation="6">
           <v-card-text class="d-flex flex-column justify-center h-100 py-2">
             <div class="text-caption">Activos</div>
 
@@ -464,8 +464,8 @@ onMounted(cargarVehiculos)
         </v-card>
       </v-col>
 
-      <v-col cols="12" md="4">
-        <v-card color="error" density="compact" height="75">
+      <v-col cols="12" sm="6" xl="4">
+        <v-card color="error" density="compact" height="80" rounded="xl" elevation="6">
           <v-card-text class="d-flex flex-column justify-center h-100 py-2">
             <div class="text-caption">Retirados</div>
 
@@ -478,10 +478,12 @@ onMounted(cargarVehiculos)
     </v-row>
 
     <v-card>
-      <v-card-title class="d-flex justify-space-between align-center flex-wrap ga-3">
+      <v-card-title
+        class="d-flex flex-column flex-xl-row justify-space-between align-xl-center ga-4"
+      >
         <span class="text-h5"> Vehículos </span>
 
-        <div class="d-flex align-center ga-3 flex-wrap">
+        <div class="d-flex flex-wrap align-center ga-3 justify-end">
           <v-text-field
             v-model="busqueda"
             label="Buscar vehículo"
@@ -489,7 +491,7 @@ onMounted(cargarVehiculos)
             hide-details
             prepend-inner-icon="mdi-magnify"
             variant="outlined"
-            style="width: 260px"
+            style="min-width: 240px; max-width: 300px"
           />
 
           <v-select
@@ -499,7 +501,7 @@ onMounted(cargarVehiculos)
             density="comfortable"
             hide-details
             variant="outlined"
-            style="width: 180px"
+            style="min-width: 170px; max-width: 190px"
           />
 
           <v-checkbox
@@ -517,72 +519,74 @@ onMounted(cargarVehiculos)
         </div>
       </v-card-title>
 
-      <v-data-table
-        class="tabla-vehiculos"
-        :headers="headers"
-        :items="vehiculosFiltrados"
-        :loading="loading"
-      >
-        <template #item.placa="{ item }">
-          <strong>
-            {{ item.placa }}
-          </strong>
-        </template>
+      <div class="overflow-x-auto">
+        <v-data-table
+          class="tabla-vehiculos"
+          :headers="headers"
+          :items="vehiculosFiltrados"
+          :loading="loading"
+        >
+          <template #item.placa="{ item }">
+            <strong>
+              {{ item.placa }}
+            </strong>
+          </template>
 
-        <template #item.capacidad_kilo="{ item }">
-          <span>
-            {{
-              item.capacidadKilo !== null && item.capacidadKilo !== undefined
-                ? `${item.capacidadKilo} kg`
-                : '-'
-            }}
-          </span>
-        </template>
+          <template #item.capacidad_kilo="{ item }">
+            <span>
+              {{
+                item.capacidadKilo !== null && item.capacidadKilo !== undefined
+                  ? `${item.capacidadKilo} kg`
+                  : '-'
+              }}
+            </span>
+          </template>
 
-        <template #item.modelo="{ item }">
-          <span>
-            {{ item.modelo || '-' }}
-          </span>
-        </template>
+          <template #item.modelo="{ item }">
+            <span>
+              {{ item.modelo || '-' }}
+            </span>
+          </template>
 
-        <template #item.claseVehiculo="{ item }">
-          <span>
-            {{ item.claseVehiculo || '-' }}
-          </span>
-        </template>
+          <template #item.claseVehiculo="{ item }">
+            <span>
+              {{ item.claseVehiculo || '-' }}
+            </span>
+          </template>
 
-        <template #item.conductorFijo="{ item }">
-          <span>
-            {{ item.conductorFijo || '-' }}
-          </span>
-        </template>
+          <template #item.conductorFijo="{ item }">
+            <span>
+              {{ item.conductorFijo || '-' }}
+            </span>
+          </template>
 
-        <template #item.estado="{ item }">
-          <v-chip
-            :color="item.estado === 'RETIRADO' ? 'error' : 'success'"
-            variant="flat"
-            size="small"
-          >
-            {{ item.estado }}
-          </v-chip>
-        </template>
-
-        <template #item.acciones="{ item }">
-          <div class="d-flex ga-2">
-            <v-btn icon="mdi-pencil" size="small" color="primary" @click="editarVehiculo(item)" />
-
-            <v-btn
-              icon="mdi-truck-remove"
+          <template #item.estado="{ item }">
+            <v-chip
+              :color="item.estado === 'RETIRADO' ? 'error' : 'success'"
+              variant="flat"
               size="small"
-              color="error"
-              @click="borrarVehiculo(item)"
-            />
-          </div>
-        </template>
-      </v-data-table>
+            >
+              {{ item.estado }}
+            </v-chip>
+          </template>
+
+          <template #item.acciones="{ item }">
+            <div class="d-flex justify-center ga-2">
+              <v-btn icon="mdi-pencil" size="small" color="primary" @click="editarVehiculo(item)" />
+
+              <v-btn
+                icon="mdi-truck-remove"
+                size="small"
+                color="error"
+                @click="borrarVehiculo(item)"
+              />
+            </div>
+          </template>
+        </v-data-table>
+      </div>
     </v-card>
 
-    <v-dialog v-model="dialog" max-width="900">
+    <v-dialog v-model="dialog" width="95%" max-width="900">
       <v-card>
         <v-card-title>
           {{ editando ? 'Editar Vehículo' : 'Nuevo Vehículo' }}
@@ -627,13 +631,16 @@ onMounted(cargarVehiculos)
         <v-card-actions>
           <v-spacer />
 
-          <v-btn color="red" @click="dialog = false"> Cancelar </v-btn>
-          <v-btn color="success" @click="guardarVehiculo"> Guardar </v-btn>
+          <v-btn color="red" variant="text" @click="dialog = false"> Cancelar </v-btn>
+
+          <v-btn color="success" size="large" rounded="lg" @click="guardarVehiculo">
+            Guardar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-dialog v-model="dialogo" max-width="450">
+    <v-dialog v-model="dialogConfirmar" max-width="450" persistent>
       <v-card rounded="xl">
         <v-card-text class="text-center pa-8">
           <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
@@ -646,11 +653,19 @@ onMounted(cargarVehiculos)
             {{ dialogoMensaje }}
           </div>
 
-          <v-btn class="mt-6" :color="dialogoColor" @click="dialogo = false"> Aceptar </v-btn>
+          <v-btn
+            class="mt-6 text-none"
+            :color="dialogoColor"
+            size="large"
+            rounded="lg"
+            @click="dialogo = false"
+          >
+            Aceptar
+          </v-btn>
         </v-card-text>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="dialogConfirmar" max-width="450">
+    <v-dialog v-model="dialogConfirmar" max-width="450" persistent>
       <v-card rounded="xl">
         <v-card-title class="text-h5"> Retirar vehículo </v-card-title>
 
@@ -665,7 +680,9 @@ onMounted(cargarVehiculos)
 
           <v-btn variant="text" @click="dialogConfirmar = false"> Cancelar </v-btn>
 
-          <v-btn color="error" @click="confirmarEliminarVehiculo"> Retirar </v-btn>
+          <v-btn color="error" size="large" rounded="lg" @click="confirmarEliminarVehiculo">
+            Retirar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -680,5 +697,13 @@ onMounted(cargarVehiculos)
 
 .tabla-vehiculos :deep(thead tr) {
   background-color: #2563eb !important;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-vehiculos {
+  min-width: 1350px;
 }
 </style>

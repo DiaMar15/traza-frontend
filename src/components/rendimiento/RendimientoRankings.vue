@@ -15,23 +15,25 @@ defineProps<{
 
   <v-divider class="my-6" />
 
-  <div class="d-flex align-center mb-4">
-    <v-icon color="primary" class="me-2"> mdi-chart-bar </v-icon>
+  <div class="d-flex flex-column flex-md-row align-md-center ga-3 mb-4">
+    <div class="d-flex align-center">
+      <v-icon color="primary" class="me-3" size="32"> mdi-chart-bar </v-icon>
 
-    <div>
-      <h2 class="text-h5 font-weight-bold">Rankings Operativos</h2>
+      <div>
+        <h2 class="text-h5 font-weight-bold">Rankings Operativos</h2>
 
-      <div class="text-medium-emphasis">
-        Comparativo de vehículos y zonas con mayor kilometraje.
+        <div class="text-medium-emphasis">
+          Comparativo de vehículos y zonas con mayor kilometraje.
+        </div>
       </div>
     </div>
   </div>
 
-  <v-row class="mt-6">
+  <v-row class="mt-4">
     <!-- VEHÍCULOS -->
 
-    <v-col cols="12" lg="6">
-      <v-card class="pa-4">
+    <v-col cols="12" xl="6">
+      <v-card rounded="xl" elevation="6" class="pa-4 h-100">
         <div class="text-h6 font-weight-bold mb-1">🚛 Ranking de Vehículos</div>
 
         <div class="text-caption text-medium-emphasis mb-4">
@@ -46,8 +48,8 @@ defineProps<{
 
     <!-- ZONAS -->
 
-    <v-col cols="12" lg="6">
-      <v-card class="pa-4">
+    <v-col cols="12" xl="6">
+      <v-card rounded="xl" elevation="6" class="pa-4 h-100">
         <div class="text-h6 font-weight-bold mb-1">📍 Ranking de Zonas</div>
 
         <div class="text-caption text-medium-emphasis mb-4">
@@ -65,7 +67,19 @@ defineProps<{
 <style scoped>
 .chart-container {
   position: relative;
-  height: 320px;
   width: 100%;
+  height: 360px;
+}
+
+@media (max-width: 1280px) {
+  .chart-container {
+    height: 320px;
+  }
+}
+
+@media (max-width: 960px) {
+  .chart-container {
+    height: 280px;
+  }
 }
 </style>

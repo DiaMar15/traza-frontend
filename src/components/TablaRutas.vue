@@ -320,18 +320,16 @@ defineExpose({
 </script>
 
 <template>
-  <v-card>
-    <v-card-title class="d-flex justify-space-between">
-      <span>Rutas</span>
-
-      <v-btn color="primary" @click="nuevaRuta"> Nueva Ruta </v-btn>
+  <v-card rounded="xl" elevation="8">
+    <v-card-title class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-3">
+      <span class="text-h5 font-weight-bold"> Rutas </span>
     </v-card-title>
 
     <!-- BUSCADOR -->
 
-    <v-card-text>
+    <v-card-text class="pb-0">
       <v-row>
-        <v-col cols="12" md="4">
+        <v-col cols="12" sm="8" md="6" lg="4">
           <v-text-field
             v-model="search"
             label="Buscar rutas"
@@ -339,6 +337,7 @@ defineExpose({
             variant="outlined"
             density="comfortable"
             clearable
+            hide-details
           />
         </v-col>
       </v-row>
@@ -346,82 +345,79 @@ defineExpose({
 
     <!-- TABLA -->
 
-    <v-data-table-server
-      class="tabla-rutas"
-      :headers="headers"
-      :items="rutas"
-      :items-length="total"
-      v-model:options="options"
-      @update:options="cargarRutas"
-    >
-      <template #item.fecha="{ item }">
-        <span>{{ item.fecha || '-' }}</span>
-      </template>
+    <div class="overflow-x-auto">
+      <v-data-table-server
+        class="tabla-rutas"
+        :headers="headers"
+        :items="rutas"
+        :items-length="total"
+        v-model:options="options"
+        @update:options="cargarRutas"
+      >
+        <template #item.fecha="{ item }">
+          <span>{{ item.fecha || '-' }}</span>
+        </template>
 
-      <template #item.dia="{ item }">
-        <span>{{ item.dia || '-' }}</span>
-      </template>
+        <template #item.dia="{ item }">
+          <span>{{ item.dia || '-' }}</span>
+        </template>
 
-      <template #item.auxiliar="{ item }">
-        <span>{{ item.auxiliar || '-' }}</span>
-      </template>
+        <template #item.auxiliar="{ item }">
+          <span>{{ item.auxiliar || '-' }}</span>
+        </template>
 
-      <template #item.zona="{ item }">
-        <span>{{ item.zona || '-' }}</span>
-      </template>
+        <template #item.zona="{ item }">
+          <span>{{ item.zona || '-' }}</span>
+        </template>
 
-      <template #item.inicioRuta="{ item }">
-        <span>{{ item.inicioRuta || '-' }}</span>
-      </template>
+        <template #item.inicioRuta="{ item }">
+          <span>{{ item.inicioRuta || '-' }}</span>
+        </template>
 
-      <template #item.finRuta="{ item }">
-        <span>{{ item.finRuta || '-' }}</span>
-      </template>
+        <template #item.finRuta="{ item }">
+          <span>{{ item.finRuta || '-' }}</span>
+        </template>
 
-      <template #item.tiempoEnRuta="{ item }">
-        <span>{{ item.tiempoEnRuta || '-' }}</span>
-      </template>
+        <template #item.tiempoEnRuta="{ item }">
+          <span>{{ item.tiempoEnRuta || '-' }}</span>
+        </template>
 
-      <template #item.horaExtra="{ item }">
-        <span>{{ item.horaExtra || '-' }}</span>
-      </template>
+        <template #item.horaExtra="{ item }">
+          <span>{{ item.horaExtra || '-' }}</span>
+        </template>
 
-      <template #item.kmInicial="{ item }">
-        <span>
+        <template #item.kmInicial="{ item }">
           {{ Number(item.kmInicial || 0).toFixed(0) }}
-        </span>
-      </template>
+        </template>
 
-      <template #item.kmFinal="{ item }">
-        <span>
+        <template #item.kmFinal="{ item }">
           {{ Number(item.kmFinal || 0).toFixed(0) }}
-        </span>
-      </template>
+        </template>
 
-      <template #item.totalKilometros="{ item }">
-        <span>
+        <template #item.totalKilometros="{ item }">
           {{ Number(item.totalKilometros || 0).toFixed(0) }}
-        </span>
-      </template>
+        </template>
 
-      <template #item.acciones="{ item }">
-        <div class="d-flex ga-2">
-          <v-btn icon color="blue" @click="editarRuta(item)"> ✏ </v-btn>
+        <template #item.acciones="{ item }">
+          <div class="d-flex justify-center ga-2">
+            <v-btn
+              icon="mdi-pencil"
+              color="primary"
+              size="small"
+              variant="tonal"
+              @click="editarRuta(item)"
+            />
 
-          <v-btn icon color="red" @click="borrarRuta(item)"> 🗑 </v-btn>
-        </div>
-      </template>
-    </v-data-table-server>
+            <v-btn
+              icon="mdi-delete"
+              color="error"
+              size="small"
+              variant="tonal"
+              @click="borrarRuta(item)"
+            />
+          </div>
+        </template>
+      </v-data-table-server>
+    </div>
   </v-card>
 </template>
-<style scoped>
-.tabla-rutas :deep(thead th) {
-  background-color: #2563eb !important;
-  color: white !important;
-  font-weight: bold !important;
-}
-
-.tabla-rutas :deep(thead tr) {
-  background-color: #2563eb !important;
-}
-</style>

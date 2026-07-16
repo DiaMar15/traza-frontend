@@ -177,9 +177,9 @@ const chartHorasOptions = {
 <template>
   <v-row class="mt-6">
     <!-- KM POR ZONA -->
-    <v-col cols="12" lg="6">
-      <v-card elevation="2" class="pa-4 fill-height">
-        <div class="d-flex align-center justify-space-between mb-4">
+    <v-col cols="12" xl="6">
+      <v-card rounded="xl" elevation="6" class="pa-4 h-100">
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
           <div class="text-h6 font-weight-bold">📍 Kilómetros por Zona</div>
 
           <v-chip color="primary" variant="tonal"> Top {{ topZonas.length }} </v-chip>
@@ -192,9 +192,9 @@ const chartHorasOptions = {
     </v-col>
 
     <!-- HORAS EXTRA -->
-    <v-col cols="12" lg="6">
-      <v-card elevation="2" class="pa-4 fill-height">
-        <div class="d-flex align-center justify-space-between mb-4">
+    <v-col cols="12" xl="6">
+      <v-card rounded="xl" elevation="6" class="pa-4 h-100">
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
           <div class="text-h6 font-weight-bold">⏱ Horas Extra por Zona</div>
 
           <v-chip color="deep-orange" variant="tonal"> Top {{ topHorasExtra.length }} </v-chip>
@@ -210,6 +210,18 @@ const chartHorasOptions = {
 
 <style scoped>
 .chart-container {
-  height: 300px;
+  height: 340px;
+}
+
+@media (max-width: 1280px) {
+  .chart-container {
+    height: 300px;
+  }
+}
+
+@media (max-width: 960px) {
+  .chart-container {
+    height: 260px;
+  }
 }
 </style>

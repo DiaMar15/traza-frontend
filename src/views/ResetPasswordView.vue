@@ -19,7 +19,7 @@ const dialogoIcono = ref('')
 
 const handleReset = async () => {
   try {
-    const res = await fetch('http://localhost:3333/reset-password', {
+    const res = await fetch('http://localhost:3333/api/v1/reset-password', {
       method: 'POST',
 
       headers: {
@@ -75,7 +75,7 @@ function cerrarDialogo() {
 
     <v-text-field v-model="password" label="Nueva contraseña" type="password" />
 
-    <v-btn @click="handleReset" block color="purple"> Cambiar contraseña </v-btn>
+    <v-btn @click="handleReset" block color="primary"> Cambiar contraseña </v-btn>
 
     <!-- 🔐 IR A LOGIN -->
     <div class="text-center mt-4">

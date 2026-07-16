@@ -22,7 +22,7 @@ function formatearTiempo(minutos: number) {
 <template>
   <v-divider class="my-6" />
 
-  <div class="d-flex align-center justify-space-between mb-4">
+  <div class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-4 mb-4">
     <div class="d-flex align-center">
       <v-icon color="primary" class="me-3" size="32"> mdi-truck </v-icon>
 
@@ -33,33 +33,35 @@ function formatearTiempo(minutos: number) {
       </div>
     </div>
 
-    <v-chip color="primary" variant="tonal"> {{ vehiculos.length }} vehículos </v-chip>
+    <v-chip color="primary" variant="tonal" size="large"> {{ vehiculos.length }} vehículos </v-chip>
   </div>
 
-  <v-card elevation="2">
-    <v-data-table
-      class="tabla-rendimiento"
-      :headers="headers"
-      :items="vehiculos"
-      :items-per-page="10"
-      density="compact"
-    >
-      <template #item.km="{ item }">
-        <strong>{{ item.km }} km</strong>
-      </template>
+  <v-card rounded="xl" elevation="6">
+    <div class="overflow-x-auto">
+      <v-data-table
+        class="tabla-rendimiento"
+        :headers="headers"
+        :items="vehiculos"
+        :items-per-page="10"
+        density="compact"
+      >
+        <template #item.km="{ item }">
+          <strong>{{ item.km }} km</strong>
+        </template>
 
-      <template #item.tiempo="{ item }">
-        <v-chip :color="colorTiempo(item.tiempo)" size="small" variant="elevated">
-          {{ formatearTiempo(item.tiempo) }}
-        </v-chip>
-      </template>
+        <template #item.tiempo="{ item }">
+          <v-chip :color="colorTiempo(item.tiempo)" size="small" variant="elevated">
+            {{ formatearTiempo(item.tiempo) }}
+          </v-chip>
+        </template>
 
-      <template #item.efectividad="{ item }">
-        <v-chip :color="colorEfectividad(item.efectividad)" size="small" variant="elevated">
-          {{ item.efectividad }}%
-        </v-chip>
-      </template>
-    </v-data-table>
+        <template #item.efectividad="{ item }">
+          <v-chip :color="colorEfectividad(item.efectividad)" size="small" variant="elevated">
+            {{ item.efectividad }}%
+          </v-chip>
+        </template>
+      </v-data-table>
+    </div>
   </v-card>
 </template>
 
@@ -68,5 +70,13 @@ function formatearTiempo(minutos: number) {
   background: #1b7dec !important;
   color: white !important;
   font-weight: bold !important;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-rendimiento {
+  min-width: 1100px;
 }
 </style>

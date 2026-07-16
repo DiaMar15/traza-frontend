@@ -16,7 +16,7 @@ const dialogoIcono = ref('')
 
 const handleForgot = async () => {
   try {
-    const res = await fetch('http://localhost:3333/forgot-password', {
+    const res = await fetch('http://localhost:3333/api/v1/forgot-password', {
       method: 'POST',
 
       headers: {
@@ -58,21 +58,41 @@ const handleForgot = async () => {
 </script>
 
 <template>
-  <v-card class="pa-6" style="max-width: 400px; margin: auto">
-    <h2 class="mb-4">Recuperar contraseña</h2>
+  <v-card class="pa-6 pa-md-8" rounded="xl" elevation="10">
+    <div class="text-center mb-6">
+      <v-icon size="48" color="primary" class="mb-2"> mdi-lock-reset </v-icon>
 
-    <v-text-field v-model="correo" label="Correo" />
+      <h2 class="text-h4 font-weight-bold">Recuperar contraseña</h2>
 
-    <v-btn @click="handleForgot" block color="blue"> Enviar correo </v-btn>
+      <div class="text-medium-emphasis mt-2">
+        Ingresa tu correo electrónico para recibir las instrucciones de recuperación.
+      </div>
+    </div>
 
-    <!-- 🔐 IR A LOGIN -->
-    <div class="text-center mt-4">
-      <a @click="router.push('/auth/login')" style="cursor: pointer">
+    <v-form @submit.prevent="handleForgot">
+      <v-text-field
+        v-model="correo"
+        label="Correo electrónico"
+        type="email"
+        prepend-inner-icon="mdi-email-outline"
+        variant="outlined"
+        density="comfortable"
+        autocomplete="email"
+        class="mb-4"
+        required
+      />
+
+      <v-btn type="submit" color="primary" block size="large" rounded="lg"> Enviar correo </v-btn>
+    </v-form>
+
+    <div class="text-center mt-5">
+      <a class="text-decoration-none" style="cursor: pointer" @click="router.push('/auth/login')">
         ¿Recuerdas tu contraseña? Inicia sesión
       </a>
     </div>
   </v-card>
-  <v-dialog v-model="dialogo" max-width="450">
+
+  <v-dialog v-model="dialogo" max-width="450" persistent>
     <v-card rounded="xl">
       <v-card-text class="text-center pa-8">
         <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
@@ -85,7 +105,15 @@ const handleForgot = async () => {
           {{ dialogoMensaje }}
         </div>
 
-        <v-btn class="mt-6" :color="dialogoColor" @click="dialogo = false"> Aceptar </v-btn>
+        <v-btn
+          class="mt-6 text-none"
+          :color="dialogoColor"
+          size="large"
+          rounded="lg"
+          @click="dialogo = false"
+        >
+          Aceptar
+        </v-btn>
       </v-card-text>
     </v-card>
   </v-dialog>

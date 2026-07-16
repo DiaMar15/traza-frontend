@@ -195,6 +195,7 @@ async function cargarRendimiento() {
 
     zonas.value = zonasData
 
+    console.log('menorKmData:', menorKmData)
     vehiculoMenorKm.value = menorKmData
 
     tiempoCediAmVehiculos.value = cediAmVehiculosData
@@ -531,7 +532,7 @@ const headers = [
 </script>
 
 <template>
-  <v-container>
+  <v-container fluid class="pa-4 pa-md-6">
     <!-- ==========================================
          HEADER
     ========================================== -->

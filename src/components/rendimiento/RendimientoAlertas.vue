@@ -7,51 +7,51 @@ defineProps<{
 </script>
 
 <template>
-  <div class="mb-4">
+  <div class="mb-6">
     <h3 class="text-h6 font-weight-bold mb-4">🚨 Alertas del Período</h3>
 
     <v-row>
       <!-- MAYOR KM -->
       <v-col cols="12" md="4">
-        <v-alert type="success" variant="tonal" border="start">
+        <v-alert type="success" variant="tonal" border="start" rounded="lg">
           <strong>Mayor kilometraje</strong>
 
-          <div class="mt-2" v-if="vehiculoMayorKm">
-            {{ vehiculoMayorKm.placa }}
+          <div v-if="vehiculoMayorKm" class="mt-3 text-body-1">
+            <strong>{{ vehiculoMayorKm.placa }}</strong>
 
             recorrió
 
-            <strong>{{ vehiculoMayorKm.km }} km</strong>
+            <strong class="text-success"> {{ vehiculoMayorKm.km }} km </strong>
           </div>
         </v-alert>
       </v-col>
 
       <!-- MENOR KM -->
       <v-col cols="12" md="4">
-        <v-alert type="warning" variant="tonal" border="start">
+        <v-alert type="warning" variant="tonal" border="start" rounded="lg">
           <strong>Menor kilometraje</strong>
 
-          <div class="mt-2" v-if="vehiculoMenorKm">
-            {{ vehiculoMenorKm.placa }}
+          <div v-if="vehiculoMenorKm" class="mt-3 text-body-1">
+            <strong>{{ vehiculoMenorKm.placa }}</strong>
 
             realizó solamente
 
-            <strong>{{ vehiculoMenorKm.km }} km</strong>
+            <strong class="text-warning"> {{ vehiculoMenorKm.kilometros }} km </strong>
           </div>
         </v-alert>
       </v-col>
 
       <!-- ZONA -->
       <v-col cols="12" md="4">
-        <v-alert type="info" variant="tonal" border="start">
+        <v-alert type="info" variant="tonal" border="start" rounded="lg">
           <strong>Zona con mayor kilometraje</strong>
 
-          <div class="mt-2" v-if="zonaMayorKm">
-            {{ zonaMayorKm.zona }}
+          <div v-if="zonaMayorKm" class="mt-3 text-body-1">
+            <strong>{{ zonaMayorKm.zona }}</strong>
 
             acumuló
 
-            <strong>{{ zonaMayorKm.total }} km</strong>
+            <strong class="text-info"> {{ zonaMayorKm.total }} km </strong>
           </div>
         </v-alert>
       </v-col>

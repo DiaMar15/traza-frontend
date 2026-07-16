@@ -175,9 +175,7 @@ async function subirFoto(event: Event) {
               @change="subirFoto"
             />
 
-            <div class="text-caption mt-3 text-medium-emphasis">
-              Haz clic sobre la fotografía para cambiarla.
-            </div>
+            <p class="text-caption mb-4">Haz clic sobre la fotografía para cambiarla.</p>
 
             <!-- FORMULARIO -->
             <v-row>

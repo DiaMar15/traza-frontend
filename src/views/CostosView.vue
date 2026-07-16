@@ -254,13 +254,23 @@ const headersPerdidas = [
 </script>
 
 <template>
-  <v-container>
-    <h2 class="text-h5 font-weight-bold mb-5">Costos por Ruta</h2>
+  <v-container fluid class="pa-4 pa-md-6">
+    <div class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-3 mb-6">
+      <div class="d-flex align-center">
+        <v-icon color="primary" size="34" class="me-3"> mdi-cash-multiple </v-icon>
+
+        <div>
+          <h2 class="text-h5 font-weight-bold">Costos por Ruta</h2>
+
+          <div class="text-medium-emphasis">Control de costos operativos por ruta.</div>
+        </div>
+      </div>
+    </div>
 
     <!-- FILTROS -->
     <v-card class="pa-4 mb-4" rounded="xl" elevation="8">
       <v-row>
-        <v-col cols="12" md="3">
+        <v-col cols="12" sm="6" md="4" lg="3">
           <v-text-field
             v-model="filtros.desde"
             type="date"
@@ -270,7 +280,7 @@ const headersPerdidas = [
           />
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" sm="6" md="4" lg="3">
           <v-text-field
             v-model="filtros.hasta"
             type="date"
@@ -280,7 +290,7 @@ const headersPerdidas = [
           />
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" sm="6" md="4" lg="3">
           <v-select
             v-model="filtros.placa"
             :items="placas"
@@ -290,12 +300,18 @@ const headersPerdidas = [
           />
         </v-col>
 
-        <v-col cols="12" md="3">
+        <v-col cols="12" sm="6" md="4" lg="3">
           <v-text-field v-model="filtros.ruta" label="Ruta" variant="outlined" density="compact" />
         </v-col>
 
         <v-col cols="12">
-          <v-btn color="red" prepend-icon="mdi-filter-remove" @click="limpiarFiltros">
+          <v-btn
+            color="red"
+            prepend-icon="mdi-filter-remove"
+            size="large"
+            rounded="lg"
+            @click="limpiarFiltros"
+          >
             Limpiar filtros
           </v-btn>
         </v-col>
@@ -305,8 +321,8 @@ const headersPerdidas = [
     <!-- KPIs -->
     <v-row class="mb-4">
       <!-- TARIFA -->
-      <v-col cols="12" md="3">
-        <v-card class="pa-2 compact-card card-blue" rounded="xl" elevation="8">
+      <v-col cols="12" sm="6" md="4" lg="3">
+        <v-card class="pa-3 compact-card card-blue" rounded="xl" elevation="8">
           <div class="d-flex align-center ga-3">
             <div class="icon-box blue-box">
               <v-icon icon="mdi-cash" size="18" />
@@ -374,7 +390,7 @@ const headersPerdidas = [
 
     <!-- ALERTAS -->
     <v-row class="mb-2">
-      <v-col cols="auto">
+      <v-col cols="12" md="6">
         <v-alert
           :type="rutasConPerdida.length > 0 ? 'error' : 'success'"
           variant="tonal"
@@ -401,64 +417,69 @@ const headersPerdidas = [
       </v-col>
     </v-row>
     <!-- TABLA -->
+
     <v-card rounded="xl" elevation="8">
-      <v-data-table
-        :headers="headers"
-        :items="costosFiltrados"
-        :items-per-page="10"
-        hover
-        density="comfortable"
-        class="tabla-costos"
-      >
-        <template #item.placa="{ item }">
-          <v-chip color="primary" variant="flat" size="small">
-            {{ item.placa }}
-          </v-chip>
-        </template>
+      <div class="overflow-x-auto">
+        <v-data-table
+          :headers="headers"
+          :items="costosFiltrados"
+          :items-per-page="10"
+          hover
+          density="comfortable"
+          class="tabla-costos"
+        >
+          <template #item.placa="{ item }">
+            <v-chip color="primary" variant="flat" size="small">
+              {{ item.placa }}
+            </v-chip>
+          </template>
 
-        <template #item.ruta="{ item }">
-          <v-chip color="brown" variant="flat" size="small"> Ruta {{ item.ruta }} </v-chip>
-        </template>
+          <template #item.ruta="{ item }">
+            <v-chip color="brown" variant="flat" size="small"> Ruta {{ item.ruta }} </v-chip>
+          </template>
 
-        <template #item.combustible="{ item }">
-          <v-chip color="teal lighten-1" variant="flat" size="small">
-            ${{ money(item.combustible) }}
-          </v-chip>
-        </template>
+          <template #item.combustible="{ item }">
+            <v-chip color="teal lighten-1" variant="flat" size="small">
+              ${{ money(item.combustible) }}
+            </v-chip>
+          </template>
 
-        <template #item.tarifa="{ item }">
-          <v-chip color="orange" variant="flat" size="small"> ${{ money(item.tarifa) }} </v-chip>
-        </template>
+          <template #item.tarifa="{ item }">
+            <v-chip color="orange" variant="flat" size="small"> ${{ money(item.tarifa) }} </v-chip>
+          </template>
 
-        <template #item.peajes="{ item }">
-          <v-chip color="blue-grey darken-2" variant="flat" size="small">
-            ${{ money(item.peajes) }}
-          </v-chip>
-        </template>
-        <template #item.total="{ item }">
-          <v-chip color="yellow" variant="flat" size="small">
-            ${{
-              money(item.combustible + item.peajes + item.calibrada + item.parqueadero + item.taxis)
-            }}
-          </v-chip>
-        </template>
+          <template #item.peajes="{ item }">
+            <v-chip color="blue-grey darken-2" variant="flat" size="small">
+              ${{ money(item.peajes) }}
+            </v-chip>
+          </template>
+          <template #item.total="{ item }">
+            <v-chip color="yellow" variant="flat" size="small">
+              ${{
+                money(
+                  item.combustible + item.peajes + item.calibrada + item.parqueadero + item.taxis,
+                )
+              }}
+            </v-chip>
+          </template>
 
-        <template #item.estado="{ item }">
-          <v-chip
-            :color="item.estado === 'Sobrecosto' ? 'red' : 'success'"
-            variant="flat"
-            size="small"
-          >
-            {{ item.estado }}
-          </v-chip>
-        </template>
-      </v-data-table>
+          <template #item.estado="{ item }">
+            <v-chip
+              :color="item.estado === 'Sobrecosto' ? 'red' : 'success'"
+              variant="flat"
+              size="small"
+            >
+              {{ item.estado }}
+            </v-chip>
+          </template>
+        </v-data-table>
+      </div>
     </v-card>
 
     <!-- RANKINGS -->
     <v-row class="mt-5">
       <!-- VEHÍCULOS -->
-      <v-col cols="12" md="4">
+      <v-col cols="12" xl="4">
         <v-card class="pa-4 top-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
             <h3 class="text-subtitle-1 font-weight-bold text-white">Vehículos más costosos</h3>
@@ -487,7 +508,7 @@ const headersPerdidas = [
       </v-col>
 
       <!-- SOBRECOSTO -->
-      <v-col cols="12" md="4">
+      <v-col cols="12" xl="4">
         <v-card class="pa-4 top-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
             <h3 class="text-subtitle-1 font-weight-bold text-white">Rutas con mayor sobrecosto</h3>
@@ -516,7 +537,7 @@ const headersPerdidas = [
       </v-col>
 
       <!-- RUTAS -->
-      <v-col cols="12" md="4">
+      <v-col ccols="12" xl="4">
         <v-card class="pa-4 top-card" rounded="xl" elevation="8">
           <div class="d-flex align-center justify-space-between mb-4">
             <h3 class="text-subtitle-1 font-weight-bold text-white">Rutas más costosas</h3>
@@ -542,45 +563,49 @@ const headersPerdidas = [
         </v-card>
       </v-col>
     </v-row>
-    <v-dialog v-model="dialogPerdidas" max-width="1200">
+    <v-dialog v-model="dialogPerdidas" width="95%" max-width="1200" persistent>
       <v-card rounded="xl">
         <v-card-title class="text-h5"> Rutas con Sobrecosto </v-card-title>
 
         <v-card-subtitle> Sobrecosto acumulado: ${{ money(sobreCostoTotal) }} </v-card-subtitle>
 
         <v-card-text>
-          <v-data-table
-            class="tabla-costos"
-            :headers="headersPerdidas"
-            :items="
-              rutasConPerdida.map((ruta) => {
-                const costo =
-                  ruta.combustible + ruta.peajes + ruta.calibrada + ruta.parqueadero + ruta.taxis
+          <div class="overflow-x-auto">
+            <v-data-table
+              class="tabla-costos"
+              :headers="headersPerdidas"
+              :items="
+                rutasConPerdida.map((ruta) => {
+                  const costo =
+                    ruta.combustible + ruta.peajes + ruta.calibrada + ruta.parqueadero + ruta.taxis
 
-                return {
-                  ...ruta,
-                  costo,
-                  perdida: costo - ruta.tarifa,
-                }
-              })
-            "
-          >
-            <template #item.tarifa="{ item }"> ${{ money(item.tarifa) }} </template>
+                  return {
+                    ...ruta,
+                    costo,
+                    perdida: costo - ruta.tarifa,
+                  }
+                })
+              "
+            >
+              <template #item.tarifa="{ item }"> ${{ money(item.tarifa) }} </template>
 
-            <template #item.costo="{ item }">
-              <v-chip color="lime accent-2" variant="flat">${{ money(item.costo) }} </v-chip>
-            </template>
+              <template #item.costo="{ item }">
+                <v-chip color="lime accent-2" variant="flat">${{ money(item.costo) }} </v-chip>
+              </template>
 
-            <template #item.perdida="{ item }">
-              <v-chip color="red" variant="flat"> ${{ money(item.perdida) }} </v-chip>
-            </template>
-          </v-data-table>
+              <template #item.perdida="{ item }">
+                <v-chip color="red" variant="flat"> ${{ money(item.perdida) }} </v-chip>
+              </template>
+            </v-data-table>
+          </div>
         </v-card-text>
 
         <v-card-actions>
           <v-spacer />
 
-          <v-btn color="primary" @click="dialogPerdidas = false"> Cerrar </v-btn>
+          <v-btn color="primary" size="large" rounded="lg" @click="dialogPerdidas = false">
+            Cerrar
+          </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -691,5 +716,29 @@ const headersPerdidas = [
   background: #0260ca !important;
 
   color: white;
+  transition: 0.25s;
+}
+
+.top-card:hover {
+  transform: translateY(-4px);
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-costos {
+  min-width: 1200px;
+}
+
+@media (max-width: 960px) {
+  .compact-card {
+    min-height: 90px;
+  }
+
+  .icon-box {
+    width: 38px;
+    height: 38px;
+  }
 }
 </style>

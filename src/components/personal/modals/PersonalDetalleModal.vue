@@ -72,9 +72,17 @@ function colorCargo(cargo: string) {
 </script>
 
 <template>
-  <v-dialog :model-value="modelValue" max-width="950" @update:model-value="cerrar">
+  <v-dialog
+    :model-value="modelValue"
+    width="95%"
+    max-width="950"
+    persistent
+    @update:model-value="cerrar"
+  >
     <v-card rounded="xl">
-      <v-card-title class="d-flex justify-space-between align-start">
+      <v-card-title
+        class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-3"
+      >
         <div>
           <div class="text-h6 font-weight-bold">
             {{ titulo }}
@@ -91,51 +99,73 @@ function colorCargo(cargo: string) {
       <v-divider />
 
       <v-card-text>
-        <div class="d-flex align-center justify-space-between mb-4">
+        <div class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-3 mb-4">
           <v-text-field
             v-model="buscar"
             label="Buscar trabajador"
             prepend-inner-icon="mdi-magnify"
+            variant="outlined"
+            density="comfortable"
             clearable
             hide-details
-            style="max-width: 350px"
+            style="min-width: 250px; max-width: 350px"
           />
 
-          <v-chip color="primary">
+          <v-chip color="primary" variant="tonal">
             {{ trabajadoresFiltrados.length }}
             trabajadores
           </v-chip>
         </div>
 
-        <v-data-table
-          :headers="headers"
-          :items="trabajadoresFiltrados"
-          density="comfortable"
-          items-per-page="10"
-        >
-          <template #item.cargo="{ item }">
-            <v-chip :color="colorCargo(item.cargo)" size="small" variant="flat" class="text-black">
-              {{ item.cargo }}
-            </v-chip>
-          </template>
+        <div class="overflow-x-auto">
+          <v-data-table
+            class="tabla-detalle"
+            :headers="headers"
+            :items="trabajadoresFiltrados"
+            density="comfortable"
+            :items-per-page="10"
+          >
+            <template #item.cargo="{ item }">
+              <v-chip
+                :color="colorCargo(item.cargo)"
+                size="small"
+                variant="flat"
+                class="text-black"
+              >
+                {{ item.cargo }}
+              </v-chip>
+            </template>
 
-          <template #item.horas="{ item }"> {{ item.horas }} h </template>
+            <template #item.horas="{ item }"> {{ item.horas }} h </template>
 
-          <template #item.valor="{ item }">
-            <v-chip v-if="tipo === 'extras'" color="yellow" variant="flat">
-              +{{ item.extras }} h
-            </v-chip>
+            <template #item.valor="{ item }">
+              <v-chip v-if="tipo === 'extras'" color="yellow" variant="flat">
+                +{{ item.extras }} h
+              </v-chip>
 
-            <v-chip v-else color="red" variant="flat"> -{{ item.negativas }} h </v-chip>
-          </template>
-        </v-data-table>
+              <v-chip v-else color="red" variant="flat"> -{{ item.negativas }} h </v-chip>
+            </template>
+          </v-data-table>
+        </div>
       </v-card-text>
 
       <v-divider />
 
       <v-card-actions class="pa-4 justify-end">
-        <v-btn color="red" variant="flat" @click="cerrar"> Cerrar </v-btn>
+        <v-btn color="red" variant="tonal" size="large" rounded="lg" @click="cerrar">
+          Cerrar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
+
+<style scoped>
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-detalle {
+  min-width: 850px;
+}
+</style>

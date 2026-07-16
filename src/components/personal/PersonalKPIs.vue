@@ -13,11 +13,11 @@ defineProps<Props>()
   <v-row class="mb-4">
     <!-- CONDUCTORES -->
 
-    <v-col cols="12" sm="6" md="3">
+    <v-col cols="12" sm="6" lg="3">
       <v-card class="mini-card card-blue" elevation="6" rounded="xl">
         <div class="d-flex align-center ga-3">
           <div class="icon-box">
-            <v-icon size="24"> mdi-account-group </v-icon>
+            <v-icon size="28"> mdi-account-group </v-icon>
           </div>
 
           <div>
@@ -35,11 +35,11 @@ defineProps<Props>()
 
     <!-- AUXILIARES -->
 
-    <v-col cols="12" sm="6" md="3">
+    <v-col cols="12" sm="6" lg="3">
       <v-card class="mini-card card-green" elevation="6" rounded="xl">
         <div class="d-flex align-center ga-3">
           <div class="icon-box">
-            <v-icon size="24"> mdi-account-hard-hat </v-icon>
+            <v-icon size="28"> mdi-account-hard-hat </v-icon>
           </div>
 
           <div>
@@ -103,12 +103,16 @@ defineProps<Props>()
 
 <style scoped>
 .mini-card {
-  padding: 16px;
-  min-height: 115px;
+  padding: 18px;
+
+  min-height: 120px;
+
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
+
   cursor: default;
+
   border-top: 4px solid rgba(255, 255, 255, 0.35);
 }
 
@@ -118,29 +122,42 @@ defineProps<Props>()
 }
 
 .icon-box {
-  width: 48px;
-  height: 48px;
+  width: 50px;
+
+  height: 50px;
+
   border-radius: 14px;
+
   display: flex;
+
   justify-content: center;
+
   align-items: center;
+
   background: rgba(255, 255, 255, 0.12);
+
+  flex-shrink: 0;
 }
 
 .mini-title {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+
   font-weight: 600;
+
   opacity: 0.95;
 }
 
 .mini-number {
-  font-size: 1.8rem;
+  font-size: 1.9rem;
+
   font-weight: 700;
-  line-height: 1.2;
+
+  line-height: 1.15;
 }
 
 .mini-subtitle {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+
   opacity: 0.85;
 }
 
@@ -166,5 +183,28 @@ defineProps<Props>()
 
 .v-card {
   overflow: hidden;
+}
+@media (max-width: 960px) {
+  .mini-card {
+    min-height: 110px;
+
+    padding: 16px;
+  }
+
+  .mini-number {
+    font-size: 1.6rem;
+  }
+
+  .icon-box {
+    width: 44px;
+
+    height: 44px;
+  }
+}
+
+@media (max-width: 600px) {
+  .mini-card {
+    min-height: 100px;
+  }
 }
 </style>

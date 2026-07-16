@@ -1,8 +1,14 @@
+<script setup lang="ts">
+import { RouterView } from 'vue-router'
+
+import FooterComponent from '@/components/FooterComponent.vue'
+
+import logo from '@/assets/Logo.jpg'
+</script>
+
 <template>
   <v-app>
     <div class="auth-layout">
-      <HeaderComponent />
-
       <div class="logo-container">
         <img :src="logo" alt="Logo" class="logo" />
       </div>
@@ -16,15 +22,6 @@
   </v-app>
 </template>
 
-<script setup lang="ts">
-import { RouterView } from 'vue-router'
-
-import HeaderComponent from '@/components/HeaderComponent.vue'
-import FooterComponent from '@/components/FooterComponent.vue'
-
-import logo from '@/assets/Logo.jpg'
-</script>
-
 <style scoped>
 .auth-layout {
   min-height: 100vh;
@@ -37,9 +34,9 @@ import logo from '@/assets/Logo.jpg'
 
   align-items: center;
 
-  gap: 20px;
+  gap: 28px;
 
-  padding: 20px;
+  padding: 24px;
 }
 
 .logo-container {
@@ -51,20 +48,34 @@ import logo from '@/assets/Logo.jpg'
 }
 
 .logo {
-  width: 260px;
+  width: 280px;
 
-  margin-bottom: 10px;
+  max-width: 90%;
 
   height: auto;
 
-  object-fit: contain;
+  transition: transform 0.25s ease;
+}
 
-  filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.25));
+.logo:hover {
+  transform: scale(1.03);
 }
 
 .form-container {
   width: 100%;
 
-  max-width: 500px;
+  max-width: 460px;
+}
+
+@media (max-width: 960px) {
+  .logo {
+    width: 180px;
+  }
+}
+
+@media (max-width: 600px) {
+  .logo {
+    width: 150px;
+  }
 }
 </style>

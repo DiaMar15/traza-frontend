@@ -58,30 +58,37 @@ async function syncRutas() {
 </script>
 
 <template>
-  <v-row>
-    <v-col cols="12">
-      <div class="d-flex justify-end"></div>
-    </v-col>
+  <v-container fluid class="pa-4 pa-md-6">
+    <v-row class="mb-4">
+      <v-col cols="12">
+        <TablaRutas ref="tabla" />
+      </v-col>
+    </v-row>
 
-    <v-col cols="12">
-      <TablaRutas ref="tabla" />
-    </v-col>
-  </v-row>
-  <v-dialog v-model="dialogo" max-width="450">
-    <v-card rounded="xl">
-      <v-card-text class="text-center pa-8">
-        <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
+    <v-dialog v-model="dialogo" max-width="450" persistent>
+      <v-card rounded="xl">
+        <v-card-text class="text-center pa-8">
+          <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
 
-        <div class="text-h5 font-weight-bold mb-2">
-          {{ dialogoTitulo }}
-        </div>
+          <div class="text-h5 font-weight-bold mb-2">
+            {{ dialogoTitulo }}
+          </div>
 
-        <div class="text-body-1">
-          {{ dialogoMensaje }}
-        </div>
+          <div class="text-body-1">
+            {{ dialogoMensaje }}
+          </div>
 
-        <v-btn class="mt-6" :color="dialogoColor" @click="dialogo = false"> Aceptar </v-btn>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+          <v-btn
+            class="mt-6 text-none"
+            :color="dialogoColor"
+            size="large"
+            rounded="lg"
+            @click="dialogo = false"
+          >
+            Aceptar
+          </v-btn>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-container>
 </template>

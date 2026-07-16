@@ -364,33 +364,44 @@ onMounted(cargar)
 </script>
 
 <template>
-  <v-container fluid>
+  <v-container fluid class="pa-4 pa-md-6">
     <!-- HEADER -->
-    <div class="d-flex justify-space-between align-center mb-6">
-      <div>
-        <h1 class="text-h4 font-weight-bold">Trabajadores Logisticos</h1>
+    <div class="d-flex flex-column flex-lg-row justify-space-between align-lg-center ga-4 mb-6">
+      <div class="d-flex align-center">
+        <v-icon color="primary" size="34" class="me-3"> mdi-account-group </v-icon>
 
-        <p class="text-subtitle-2 text-medium-emphasis">Gestión de personal operativo</p>
+        <div>
+          <h1 class="text-h4 font-weight-bold">Trabajadores Logísticos</h1>
+
+          <p class="text-subtitle-2 text-medium-emphasis">Gestión de personal operativo</p>
+        </div>
       </div>
 
-      <div class="d-flex ga-2">
+      <div class="d-flex flex-wrap ga-2">
         <v-btn
           color="success"
           prepend-icon="mdi-sync"
           rounded="lg"
+          size="large"
           :loading="syncLoading"
           @click="sincronizarPersonal"
         >
           Sincronizar Personal
         </v-btn>
 
-        <v-btn color="primary" prepend-icon="mdi-plus" rounded="lg" @click="abrirCrear">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          rounded="lg"
+          size="large"
+          @click="abrirCrear"
+        >
           Nuevo conductor
         </v-btn>
       </div>
     </div>
     <!-- FILTROS -->
-    <v-card rounded="xl" elevation="3" class="mb-5">
+    <v-card rounded="xl" elevation="6" class="mb-5">
       <v-card-text>
         <div class="d-flex flex-wrap ga-3 align-center">
           <!-- BUSCADOR -->
@@ -401,7 +412,7 @@ onMounted(cargar)
             variant="outlined"
             density="compact"
             hide-details
-            style="max-width: 330px"
+            style="min-width: 240px; max-width: 330px"
           />
 
           <!-- CONTADORES -->
@@ -419,7 +430,7 @@ onMounted(cargar)
     </v-card>
 
     <!-- TABS -->
-    <v-tabs v-model="tab" class="mb-4">
+    <v-tabs v-model="tab" color="primary" class="mb-4">
       <v-tab value="activos"> Activos </v-tab>
 
       <v-tab value="inactivos"> Inactivos </v-tab>
@@ -430,82 +441,84 @@ onMounted(cargar)
       <!-- ACTIVOS -->
       <v-window-item value="activos">
         <v-card rounded="xl" elevation="3">
-          <v-data-table
-            class="tabla-conductores"
-            :headers="headers"
-            :items="activos"
-            :search="busqueda"
-            :loading="loading"
-            items-per-page="15"
-            fixed-header
-            height="650"
-            density="compact"
-          >
-            <!-- NOMBRE -->
-            <template #item.nombre="{ item }">
-              <div class="d-flex align-center ga-2">
-                <span>
-                  {{ item.nombre }}
-                </span>
+          <div class="overflow-x-auto">
+            <v-data-table
+              class="tabla-conductores"
+              :headers="headers"
+              :items="activos"
+              :search="busqueda"
+              :loading="loading"
+              items-per-page="15"
+              fixed-header
+              height="650"
+              density="compact"
+            >
+              <!-- NOMBRE -->
+              <template #item.nombre="{ item }">
+                <div class="d-flex align-center ga-2">
+                  <span>
+                    {{ item.nombre }}
+                  </span>
 
-                <!-- ALERTA -->
-                <v-tooltip v-if="esParecido(item.nombre)" text="Posible duplicado">
-                  <template #activator="{ props }">
-                    <v-icon v-bind="props" color="orange" size="18"> mdi-alert </v-icon>
-                  </template>
-                </v-tooltip>
-              </div>
-            </template>
+                  <!-- ALERTA -->
+                  <v-tooltip v-if="esParecido(item.nombre)" text="Posible duplicado">
+                    <template #activator="{ props }">
+                      <v-icon v-bind="props" color="orange" size="18"> mdi-alert </v-icon>
+                    </template>
+                  </v-tooltip>
+                </div>
+              </template>
 
-            <template #item.cedula="{ item }">
-              {{ item.cedula || '-' }}
-            </template>
+              <template #item.cedula="{ item }">
+                {{ item.cedula || '-' }}
+              </template>
 
-            <template #item.celular="{ item }">
-              {{ item.celular || '-' }}
-            </template>
+              <template #item.celular="{ item }">
+                {{ item.celular || '-' }}
+              </template>
 
-            <template #item.cargo="{ item }">
-              <v-chip
-                v-if="item.cargo"
-                :color="
-                  item.cargo.includes('CONDUCTOR')
-                    ? 'blue darken-3'
-                    : item.cargo.includes('AUXILIAR')
-                      ? 'light-green darken-4'
-                      : 'deep-orange darken-2'
-                "
-                size="small"
-                variant="flat"
-              >
-                {{ item.cargo }}
-              </v-chip>
-
-              <span v-else>-</span>
-            </template>
-
-            <!-- ESTADO -->
-            <template #item.estado>
-              <v-chip color="green darken-4" size="small" variant="flat"> Activo </v-chip>
-            </template>
-
-            <!-- ACCIONES -->
-            <template #item.acciones="{ item }">
-              <div class="d-flex justify-center ga-1">
-                <!-- EDITAR -->
-                <v-btn icon="mdi-pencil" size="small" variant="text" @click="abrirEditar(item)" />
-
-                <!-- INACTIVAR -->
-                <v-btn
-                  icon="mdi-account-off"
+              <template #item.cargo="{ item }">
+                <v-chip
+                  v-if="item.cargo"
+                  :color="
+                    item.cargo.includes('CONDUCTOR')
+                      ? 'blue darken-3'
+                      : item.cargo.includes('AUXILIAR')
+                        ? 'light-green darken-4'
+                        : 'deep-orange darken-2'
+                  "
                   size="small"
-                  color="red"
-                  variant="text"
-                  @click="inactivar(item.id)"
-                />
-              </div>
-            </template>
-          </v-data-table>
+                  variant="flat"
+                >
+                  {{ item.cargo }}
+                </v-chip>
+
+                <span v-else>-</span>
+              </template>
+
+              <!-- ESTADO -->
+              <template #item.estado>
+                <v-chip color="green darken-4" size="small" variant="flat"> Activo </v-chip>
+              </template>
+
+              <!-- ACCIONES -->
+              <template #item.acciones="{ item }">
+                <div class="d-flex justify-center ga-1">
+                  <!-- EDITAR -->
+                  <v-btn icon="mdi-pencil" size="small" variant="text" @click="abrirEditar(item)" />
+
+                  <!-- INACTIVAR -->
+                  <v-btn
+                    icon="mdi-account-off"
+                    size="small"
+                    color="red"
+                    variant="text"
+                    @click="inactivar(item.id)"
+                  />
+                </div>
+              </template>
+            </v-data-table>
+          </div>
         </v-card>
       </v-window-item>
 
@@ -520,7 +533,7 @@ onMounted(cargar)
             :loading="loading"
             items-per-page="15"
             fixed-header
-            height="650"
+            height="600"
             density="compact"
           >
             <!-- ESTADO -->
@@ -547,7 +560,7 @@ onMounted(cargar)
     </v-window>
 
     <!-- DIALOG -->
-    <v-dialog v-model="dialog" max-width="500">
+    <v-dialog v-model="dialog" width="95%" max-width="500" persistent>
       <v-card rounded="xl">
         <v-card-title class="text-h6 font-weight-bold">
           {{ editando ? 'Editar conductor' : 'Nuevo conductor' }}
@@ -568,11 +581,11 @@ onMounted(cargar)
 
           <v-btn variant="text" @click="dialog = false"> Cancelar </v-btn>
 
-          <v-btn color="primary" @click="guardar"> Guardar </v-btn>
+          <v-btn color="primary" size="large" rounded="lg" @click="guardar"> Guardar </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-dialog v-model="mostrarDialogo" max-width="500">
+    <v-dialog v-model="mostrarDialogo" max-width="500" persistent>
       <v-card rounded="xl">
         <v-card-text class="text-center pa-8">
           <v-icon :icon="dialogoIcono" :color="dialogoColor" size="70" class="mb-4" />
@@ -585,7 +598,13 @@ onMounted(cargar)
             {{ dialogoMensaje }}
           </div>
 
-          <v-btn class="mt-6" :color="dialogoColor" @click="mostrarDialogo = false">
+          <v-btn
+            class="mt-6 text-none"
+            :color="dialogoColor"
+            size="large"
+            rounded="lg"
+            @click="mostrarDialogo = false"
+          >
             Aceptar
           </v-btn>
         </v-card-text>
@@ -602,5 +621,12 @@ onMounted(cargar)
 
 .tabla-conductores :deep(thead tr) {
   background-color: #2563eb !important;
+}
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-conductores {
+  min-width: 1050px;
 }
 </style>

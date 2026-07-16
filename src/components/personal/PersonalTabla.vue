@@ -55,8 +55,8 @@ function colorCargo(cargo: string) {
 </script>
 
 <template>
-  <v-card rounded="xl" elevation="6" class="mt-5">
-    <v-card-title class="d-flex justify-space-between align-start">
+  <v-card rounded="xl" elevation="6" class="mt-6">
+    <v-card-title class="d-flex flex-column flex-md-row justify-space-between align-md-center ga-3">
       <div>
         <div class="text-h6 font-weight-bold">Personal operativo</div>
 
@@ -72,57 +72,67 @@ function colorCargo(cargo: string) {
 
     <v-divider />
 
-    <v-data-table
-      class="tabla-personal"
-      :headers="headers"
-      :items="trabajadores"
-      items-per-page="10"
-      density="comfortable"
-    >
-      <!-- Trabajador -->
+    <div class="overflow-x-auto">
+      <v-data-table
+        class="tabla-personal"
+        :headers="headers"
+        :items="trabajadores"
+        :items-per-page="10"
+        density="comfortable"
+      >
+        <!-- Trabajador -->
 
-      <template #item.nombre="{ item }">
-        <strong>
-          {{ item.nombre }}
-        </strong>
-      </template>
+        <template #item.nombre="{ item }">
+          <strong>
+            {{ item.nombre }}
+          </strong>
+        </template>
 
-      <!-- Cargo -->
+        <!-- Cargo -->
 
-      <template #item.cargo="{ item }">
-        <v-chip :color="colorCargo(item.cargo)" size="small" variant="elevated">
-          {{ item.cargo }}
-        </v-chip>
-      </template>
+        <template #item.cargo="{ item }">
+          <v-chip :color="colorCargo(item.cargo)" size="small" variant="elevated">
+            {{ item.cargo }}
+          </v-chip>
+        </template>
 
-      <!-- Horas -->
+        <!-- Horas -->
 
-      <template #item.horas="{ item }"> {{ item.horas }} h </template>
+        <template #item.horas="{ item }"> {{ item.horas }} h </template>
 
-      <!-- Extras -->
+        <!-- Extras -->
 
-      <template #item.extras="{ item }">
-        <v-chip v-if="item.extras > 0" color="yellow" variant="elevated">
-          +{{ item.extras }} h
-        </v-chip>
+        <template #item.extras="{ item }">
+          <v-chip v-if="item.extras > 0" color="yellow" variant="elevated">
+            +{{ item.extras }} h
+          </v-chip>
 
-        <span v-else>—</span>
-      </template>
+          <span v-else>—</span>
+        </template>
 
-      <!-- Negativas -->
+        <!-- Negativas -->
 
-      <template #item.negativas="{ item }">
-        <v-chip v-if="item.negativas > 0" color="red" variant="elevated">
-          -{{ item.negativas }} h
-        </v-chip>
+        <template #item.negativas="{ item }">
+          <v-chip v-if="item.negativas > 0" color="red" variant="elevated">
+            -{{ item.negativas }} h
+          </v-chip>
 
-        <span v-else>—</span>
-      </template>
-    </v-data-table>
+          <span v-else>—</span>
+        </template>
+      </v-data-table>
+    </div>
   </v-card>
 </template>
 
 <style scoped>
+.overflow-x-auto {
+  overflow-x: auto;
+}
+
+.tabla-personal {
+  min-width: 900px;
+}
+
 .tabla-personal :deep(thead th) {
   background-color: #1b63ff !important;
   color: white !important;

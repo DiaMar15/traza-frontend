@@ -104,14 +104,16 @@ const zonas = computed(() => {
 
   <v-divider class="my-6" />
 
-  <div class="d-flex align-center mb-4">
-    <v-icon color="primary" class="me-2"> mdi-office-building </v-icon>
+  <div class="d-flex flex-column flex-md-row align-md-center ga-3 mb-4">
+    <div class="d-flex align-center">
+      <v-icon color="primary" class="me-3" size="32"> mdi-office-building </v-icon>
 
-    <div>
-      <h2 class="text-h5 font-weight-bold">Indicadores CEDI</h2>
+      <div>
+        <h2 class="text-h5 font-weight-bold">Indicadores CEDI</h2>
 
-      <div class="text-medium-emphasis">
-        Comparativo de tiempos registrados durante la jornada AM y PM.
+        <div class="text-medium-emphasis">
+          Comparativo de tiempos registrados durante la jornada AM y PM.
+        </div>
       </div>
     </div>
   </div>
@@ -121,50 +123,50 @@ const zonas = computed(() => {
          VEHÍCULOS
     ========================================== -->
 
-    <v-col cols="12" lg="6">
-      <v-card elevation="2" class="pa-4">
-        <div class="d-flex align-center justify-space-between mb-4">
+    <v-col cols="12" xl="6">
+      <v-card rounded="xl" elevation="6" class="pa-4 h-100">
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
           <div class="text-h6 font-weight-bold">🚛 Tiempo CEDI por Vehículo</div>
 
           <v-chip color="primary" variant="tonal"> {{ vehiculos.length }} vehículos </v-chip>
         </div>
 
         <div class="tabla-cedi">
-          <v-table density="compact">
-            <thead>
-              <tr>
-                <th>Vehículo</th>
+          <div class="overflow-x-auto">
+            <v-table density="compact">
+              <thead>
+                <tr>
+                  <th>Vehículo</th>
 
-                <th class="text-center">AM</th>
+                  <th class="text-center">AM</th>
 
-                <th class="text-center">PM</th>
-              </tr>
-            </thead>
+                  <th class="text-center">PM</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              <tr v-for="item in vehiculos" :key="item.placa">
-                <td>
-                  {{ item.placa }}
-                </td>
+              <tbody>
+                <tr v-for="item in vehiculos" :key="item.placa">
+                  <td>{{ item.placa }}</td>
 
-                <td class="text-center">
-                  <v-chip v-if="item.am !== null" color="warning" size="small" variant="tonal">
-                    {{ item.am }} min
-                  </v-chip>
+                  <td class="text-center">
+                    <v-chip v-if="item.am !== null" color="warning" size="small" variant="tonal">
+                      {{ item.am }} min
+                    </v-chip>
 
-                  <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
-                </td>
+                    <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
+                  </td>
 
-                <td class="text-center">
-                  <v-chip v-if="item.pm !== null" color="primary" size="small" variant="tonal">
-                    {{ item.pm }} min
-                  </v-chip>
+                  <td class="text-center">
+                    <v-chip v-if="item.pm !== null" color="primary" size="small" variant="tonal">
+                      {{ item.pm }} min
+                    </v-chip>
 
-                  <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+                    <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
         </div>
       </v-card>
     </v-col>
@@ -173,50 +175,50 @@ const zonas = computed(() => {
          ZONAS
     ========================================== -->
 
-    <v-col cols="12" lg="6">
-      <v-card elevation="2" class="pa-4">
-        <div class="d-flex align-center justify-space-between mb-4">
+    <v-col cols="12" xl="6">
+      <v-card rounded="xl" elevation="6" class="pa-4 h-100">
+        <div class="d-flex flex-column flex-sm-row justify-space-between align-sm-center ga-3 mb-4">
           <div class="text-h6 font-weight-bold">📍 Tiempo CEDI por Zona</div>
 
           <v-chip color="primary" variant="tonal"> {{ zonas.length }} zonas </v-chip>
         </div>
 
         <div class="tabla-cedi">
-          <v-table density="compact">
-            <thead>
-              <tr>
-                <th>Zona</th>
+          <div class="overflow-x-auto">
+            <v-table density="compact">
+              <thead>
+                <tr>
+                  <th>Zona</th>
 
-                <th class="text-center">AM</th>
+                  <th class="text-center">AM</th>
 
-                <th class="text-center">PM</th>
-              </tr>
-            </thead>
+                  <th class="text-center">PM</th>
+                </tr>
+              </thead>
 
-            <tbody>
-              <tr v-for="item in zonas" :key="item.zona">
-                <td>
-                  {{ item.zona }}
-                </td>
+              <tbody>
+                <tr v-for="item in zonas" :key="item.zona">
+                  <td>{{ item.zona }}</td>
 
-                <td class="text-center">
-                  <v-chip v-if="item.am !== null" color="warning" size="small" variant="tonal">
-                    {{ item.am }} min
-                  </v-chip>
+                  <td class="text-center">
+                    <v-chip v-if="item.am !== null" color="warning" size="small" variant="tonal">
+                      {{ item.am }} min
+                    </v-chip>
 
-                  <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
-                </td>
+                    <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
+                  </td>
 
-                <td class="text-center">
-                  <v-chip v-if="item.pm !== null" color="primary" size="small" variant="tonal">
-                    {{ item.pm }} min
-                  </v-chip>
+                  <td class="text-center">
+                    <v-chip v-if="item.pm !== null" color="primary" size="small" variant="tonal">
+                      {{ item.pm }} min
+                    </v-chip>
 
-                  <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
-                </td>
-              </tr>
-            </tbody>
-          </v-table>
+                    <v-chip v-else color="grey" size="small" variant="outlined"> N/D </v-chip>
+                  </td>
+                </tr>
+              </tbody>
+            </v-table>
+          </div>
         </div>
       </v-card>
     </v-col>
@@ -225,7 +227,11 @@ const zonas = computed(() => {
 
 <style scoped>
 .tabla-cedi {
-  max-height: 320px;
+  max-height: 340px;
   overflow-y: auto;
+}
+
+.overflow-x-auto {
+  overflow-x: auto;
 }
 </style>
