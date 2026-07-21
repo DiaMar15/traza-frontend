@@ -1,5 +1,4 @@
-const API = 'http://localhost:3333/api/v1/dashboard'
-
+import { API } from '@/config/api'
 /* ==========================================
    QUERY PARAMS
 ========================================== */
@@ -25,11 +24,6 @@ function crearQuery(params: { dia?: string; semana?: number; mes?: string; top?:
 
   return query.toString()
 }
-
-/* ==========================================
-   RENDIMIENTO GENERAL
-========================================== */
-
 export async function obtenerRendimiento(
   filtros: {
     dia?: string
@@ -39,8 +33,7 @@ export async function obtenerRendimiento(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/rendimiento?${query}`)
-
+  const response = await fetch(`${API}/dashboard/rendimiento?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el rendimiento')
   }
@@ -61,8 +54,7 @@ export async function obtenerRendimientoVehiculos(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/rendimiento-vehiculos?${query}`)
-
+  const response = await fetch(`${API}/dashboard/rendimiento-vehiculos?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el rendimiento de vehículos')
   }
@@ -84,8 +76,7 @@ export async function obtenerKmPorZona(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/km-por-zona?${query}`)
-
+  const response = await fetch(`${API}/dashboard/km-por-zona?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener los kilómetros por zona')
   }
@@ -105,8 +96,7 @@ export async function obtenerVehiculoMenorKilometraje(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/vehiculo-menor-kilometraje?${query}`)
-
+  const response = await fetch(`${API}/dashboard/vehiculo-menor-kilometraje?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el vehículo con menor kilometraje')
   }
@@ -127,8 +117,7 @@ export async function obtenerTiempoCediAmVehiculos(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/tiempo-cedi-am-vehiculos?${query}`)
-
+  const response = await fetch(`${API}/dashboard/tiempo-cedi-am-vehiculos?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el tiempo CEDI AM de los vehículos')
   }
@@ -149,8 +138,7 @@ export async function obtenerTiempoCediPmVehiculos(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/tiempo-cedi-pm-vehiculos?${query}`)
-
+  const response = await fetch(`${API}/dashboard/tiempo-cedi-am-zona?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el tiempo CEDI PM de los vehículos')
   }
@@ -171,8 +159,7 @@ export async function obtenerTiempoCediAmZona(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/tiempo-cedi-am-zona?${query}`)
-
+  const response = await fetch(`${API}/dashboard/tiempo-cedi-am-zona?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el tiempo CEDI AM por zona')
   }
@@ -193,8 +180,7 @@ export async function obtenerTiempoCediPmZona(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/tiempo-cedi-pm-zona?${query}`)
-
+  const response = await fetch(`${API}/dashboard/tiempo-cedi-pm-zona?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener el tiempo CEDI PM por zona')
   }
@@ -215,8 +201,7 @@ export async function obtenerHorasExtraZona(
 ) {
   const query = crearQuery(filtros)
 
-  const response = await fetch(`${API}/horas-extra-zona?${query}`)
-
+  const response = await fetch(`${API}/dashboard/horas-extra-zona?${query}`)
   if (!response.ok) {
     throw new Error('No fue posible obtener las horas extra por zona')
   }

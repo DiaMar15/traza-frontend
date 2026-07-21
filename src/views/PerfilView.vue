@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { authSetStore } from '@/stores/AuthStore'
 import AuthService from '@/services/AuthService'
+import { API_URL } from '@/config/api'
 
 const auth = authSetStore()
 const authService = new AuthService()
@@ -154,11 +155,7 @@ async function subirFoto(event: Event) {
             <div class="d-flex flex-column align-center mb-8">
               <v-avatar size="150" class="cursor-pointer" @click="seleccionarFoto">
                 <v-img
-                  :src="
-                    perfil.avatar
-                      ? `http://localhost:3333/${perfil.avatar}`
-                      : 'https://i.pravatar.cc/300'
-                  "
+                  :src="perfil.avatar ? `${API_URL}/${perfil.avatar}` : 'https://i.pravatar.cc/300'"
                 />
               </v-avatar>
 

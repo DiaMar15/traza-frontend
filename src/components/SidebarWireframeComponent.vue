@@ -17,9 +17,7 @@
     <v-list>
       <v-list-item
         :prepend-avatar="
-          userData?.avatar
-            ? `http://localhost:3333/${userData.avatar}`
-            : 'https://i.pravatar.cc/100?img=2'
+          userData?.avatar ? `${API_URL}/${userData.avatar}` : 'https://i.pravatar.cc/100?img=2'
         "
         :title="props.fijado ? userData?.nombre : ''"
         :subtitle="props.fijado ? userData?.email : ''"
@@ -97,6 +95,7 @@
 <script setup lang="ts">
 import { inject, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { authSetStore } from '@/stores/AuthStore'
+import { API_URL } from '@/config/api'
 
 const auth = authSetStore()
 const userData: any = inject('userData')

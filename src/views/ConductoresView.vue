@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { API } from '@/config/api'
 
 /* --------------------------
    TIPOS
@@ -180,7 +181,7 @@ async function cargar() {
   loading.value = true
 
   try {
-    const res = await fetch('http://localhost:3333/api/v1/conductores')
+    const res = await fetch(`${API}/conductores`)
 
     conductores.value = await res.json()
   } catch (error) {
@@ -198,9 +199,7 @@ async function sincronizarPersonal() {
   try {
     syncLoading.value = true
 
-    const response = await fetch('http://localhost:3333/api/v1/conductores/sincronizar', {
-      method: 'POST',
-    })
+    const response = await fetch(`${API}/conductores/sincronizar`, { method: 'POST' })
 
     const data = await response.json()
 
@@ -280,7 +279,7 @@ async function guardar() {
     -------------------------- */
     if (editando.value) {
       await fetch(
-        `http://localhost:3333/api/v1/conductores/${form.value.id}`,
+        `${API}/conductores/${form.value.id}`,
 
         {
           method: 'PUT',
@@ -297,7 +296,7 @@ async function guardar() {
        CREAR
     -------------------------- */
       await fetch(
-        'http://localhost:3333/api/v1/conductores',
+        `${API}/conductores`,
 
         {
           method: 'POST',
@@ -325,7 +324,7 @@ async function guardar() {
 async function inactivar(id: number) {
   try {
     await fetch(
-      `http://localhost:3333/api/v1/conductores/${id}/inactivar`,
+      `${API}/conductores/${id}/inactivar`,
 
       {
         method: 'PUT',
@@ -344,7 +343,7 @@ async function inactivar(id: number) {
 async function reactivar(id: number) {
   try {
     await fetch(
-      `http://localhost:3333/api/v1/conductores/${id}/reactivar`,
+      `${API}/conductores/${id}/reactivar`,
 
       {
         method: 'PUT',

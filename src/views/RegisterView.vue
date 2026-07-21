@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API } from '@/config/api'
 
 const nombre = ref('')
 const correo = ref('')
@@ -19,7 +20,7 @@ const dialogoIcono = ref('')
 
 const register = async () => {
   try {
-    const res = await fetch('http://localhost:3333/api/v1/auth/register', {
+    const res = await fetch(`${API}/auth/register`, {
       method: 'POST',
 
       headers: {

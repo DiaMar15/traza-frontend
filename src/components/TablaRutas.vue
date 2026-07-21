@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 
 import { obtenerRutas, crearRuta, actualizarRuta, eliminarRuta } from '@/services/rutasService'
+import { API } from '@/config/api'
 
 /* -------------------------
    TYPES
@@ -172,7 +173,7 @@ async function cargarRutas() {
 ------------------------- */
 
 async function cargarVehiculos() {
-  const res = await fetch('http://localhost:3333/api/v1/vehiculos')
+  const res = await fetch(`${API}/vehiculos`)
 
   vehiculos.value = await res.json()
 }

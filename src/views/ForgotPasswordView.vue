@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API } from '@/config/api'
 
 const correo = ref('')
 const router = useRouter()
@@ -16,7 +17,7 @@ const dialogoIcono = ref('')
 
 const handleForgot = async () => {
   try {
-    const res = await fetch('http://localhost:3333/api/v1/forgot-password', {
+    const res = await fetch(`${API}/forgot-password`, {
       method: 'POST',
 
       headers: {

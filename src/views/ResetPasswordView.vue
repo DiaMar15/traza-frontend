@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { API } from '@/config/api'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,7 +20,7 @@ const dialogoIcono = ref('')
 
 const handleReset = async () => {
   try {
-    const res = await fetch('http://localhost:3333/api/v1/reset-password', {
+    const res = await fetch(`${API}/reset-password`, {
       method: 'POST',
 
       headers: {

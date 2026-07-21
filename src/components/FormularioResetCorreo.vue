@@ -19,6 +19,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API } from '@/config/api'
 
 const correo = ref('')
 const router = useRouter()
@@ -29,7 +30,7 @@ const emit = defineEmits<{
 }>()
 
 const enviar = async () => {
-  const res = await fetch('http://localhost:3333/forgot-password', {
+  const res = await fetch(`${API}/forgot-password`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

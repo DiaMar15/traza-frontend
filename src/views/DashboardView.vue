@@ -3,6 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 import { Bar } from 'vue-chartjs'
 import ChartDataLabels from 'chartjs-plugin-datalabels'
 import GoogleSheetsService from '@/services/googleSheetsService'
+import { API } from '@/config/api'
 
 const googleSheetsService = new GoogleSheetsService()
 const loading = ref(false)
@@ -294,7 +295,7 @@ async function cargarSemanas() {
     const data = await fetchJSON<{
       semana: number
       semanas: number[]
-    }>('http://localhost:3333/api/v1/dashboard/semanas')
+    }>(`${API}/dashboard/semanas`)
 
     semanas.value = data.semanas
 
@@ -328,9 +329,7 @@ const cargarDashboard = async () => {
       params.append('mes', mes.value)
     }
 
-    const data = await fetchJSON<DashboardPrincipalResponse>(
-      `http://localhost:3333/api/v1/dashboard/principal?${params}`,
-    )
+    const data = await fetchJSON<DashboardPrincipalResponse>(`${API}/dashboard/principal?${params}`)
     vistaGeneral.value = data.vistaGeneral
 
     detalle.value = data.detalle

@@ -1,5 +1,4 @@
-const API = 'http://localhost:3333/api/v1/usuarios'
-
+import { API } from '@/config/api'
 export type Usuario = {
   id: number
   nombre: string
@@ -15,7 +14,7 @@ export default class UsuariosService {
   static async obtenerUsuarios(): Promise<Usuario[]> {
     const token = localStorage.getItem('token')
 
-    const response = await fetch(API, {
+    const response = await fetch(`${API}/usuarios`, {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
@@ -32,7 +31,7 @@ export default class UsuariosService {
   static async update(id: number, data: any) {
     const token = localStorage.getItem('token')
 
-    const response = await fetch(`${API}/${id}`, {
+    const response = await fetch(`${API}/usuarios/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -51,7 +50,7 @@ export default class UsuariosService {
   static async inactivar(id: number) {
     const token = localStorage.getItem('token')
 
-    const response = await fetch(`${API}/${id}/inactivar`, {
+    const response = await fetch(`${API}/usuarios/${id}/inactivar`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -68,7 +67,7 @@ export default class UsuariosService {
   static async reactivar(id: number) {
     const token = localStorage.getItem('token')
 
-    const response = await fetch(`${API}/${id}/reactivar`, {
+    const response = await fetch(`${API}/usuarios/${id}/reactivar`, {
       method: 'PUT',
       headers: {
         Authorization: `Bearer ${token}`,

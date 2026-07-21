@@ -1,7 +1,6 @@
-const API = 'http://localhost:3333'
+import { API } from '@/config/api'
 
 export default class PasswordService {
-
   async forgot(correo: string) {
     const response = await fetch(`${API}/forgot-password`, {
       method: 'POST',

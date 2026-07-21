@@ -1,7 +1,6 @@
-const API = 'http://localhost:3333/api/v1'
+import { API } from '@/config/api'
 
 export default class RoleService {
-
   static async getAll() {
     const token = localStorage.getItem('token')
 

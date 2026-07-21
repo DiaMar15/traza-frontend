@@ -1,4 +1,4 @@
-const API = 'http://localhost:3333/api/v1'
+import { API } from '@/config/api'
 
 const headers = (token: string) => ({
   Authorization: `Bearer ${token}`,

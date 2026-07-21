@@ -10,17 +10,10 @@
         class="text-black"
       />
 
-      <v-btn type="submit" color="primary" block>
-        Confirmar
-      </v-btn>
+      <v-btn type="submit" color="primary" block> Confirmar </v-btn>
     </v-form>
 
-    <v-alert
-      v-if="mensajeError"
-      type="error"
-      class="mt-4"
-      dismissible
-    >
+    <v-alert v-if="mensajeError" type="error" class="mt-4" dismissible>
       {{ mensajeError }}
     </v-alert>
   </div>
@@ -29,6 +22,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API } from '@/config/api'
 
 const props = defineProps<{
   token: string
@@ -52,15 +46,15 @@ const confirmar = async () => {
     return
   }
 
-  const res = await fetch('http://localhost:3333/reset-password', {
+  const res = await fetch(`${API}/reset-password`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       token: props.token,
-      password: nueva.value
-    })
+      password: nueva.value,
+    }),
   })
 
   const data = await res.json()

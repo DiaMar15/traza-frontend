@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { API } from '@/config/api'
 
 const vehiculos = ref<any[]>([])
 
@@ -142,8 +143,7 @@ async function cargarVehiculos() {
   try {
     loading.value = true
 
-    const res = await fetch('http://localhost:3333/api/v1/vehiculos')
-
+    const res = await fetch(`${API}/vehiculos`)
     vehiculos.value = await res.json()
   } catch (error) {
     console.error(error)
@@ -164,7 +164,7 @@ async function cargarVehiculos() {
 
 async function crearVehiculo(data: any) {
   const res = await fetch(
-    'http://localhost:3333/api/v1/vehiculos',
+    `${API}/vehiculos`,
 
     {
       method: 'POST',
@@ -188,7 +188,7 @@ async function crearVehiculo(data: any) {
 
 async function actualizarVehiculo(id: number, data: any) {
   const res = await fetch(
-    `http://localhost:3333/api/v1/vehiculos/${id}`,
+    `${API}/vehiculos/${id}`,
 
     {
       method: 'PUT',
@@ -212,7 +212,7 @@ async function actualizarVehiculo(id: number, data: any) {
 
 async function eliminarVehiculo(id: number) {
   const res = await fetch(
-    `http://localhost:3333/api/v1/vehiculos/${id}`,
+    `${API}/vehiculos/${id}`,
 
     {
       method: 'DELETE',
@@ -230,8 +230,7 @@ async function sincronizarVehiculos() {
   try {
     loading.value = true
 
-    const res = await fetch('http://localhost:3333/api/v1/vehiculos/sync')
-
+    const res = await fetch(`${API}/vehiculos/sync`)
     const data = await res.json()
 
     await cargarVehiculos()

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { API } from '@/config/api'
 
 type CostoRuta = {
   fecha: string
@@ -34,8 +35,7 @@ function money(valor: number) {
 ========================= */
 
 async function cargar() {
-  const res = await fetch('http://localhost:3333/api/v1/dashboard/costos-detalle')
-
+  const res = await fetch(`${API}/dashboard/costos-detalle`)
   const data = await res.json()
   costos.value = Array.isArray(data)
     ? data.map((i: any) => ({
