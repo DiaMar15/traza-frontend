@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { API } from '@/config/api'
 
 type CostoRuta = {
@@ -22,7 +22,8 @@ const dialogPerdidas = ref(false)
 const filtros = ref({
   desde: '',
   hasta: '',
-  placa: '',
+  tipo: 'placa',
+  valor: '',
   ruta: '',
 })
 
@@ -62,6 +63,7 @@ async function cargar() {
             : 'Rentable',
       }))
     : []
+  console.log(costos.value[0])
 }
 
 onMounted(cargar)
@@ -70,7 +72,21 @@ onMounted(cargar)
    FILTROS
 ========================= */
 
-const placas = computed(() => [...new Set(costos.value.map((i) => i.placa))])
+const opcionesFiltro = computed(() => {
+  const datos =
+    filtros.value.tipo === 'placa'
+      ? costos.value.map((i) => i.placa)
+      : costos.value.map((i) => i.zona)
+
+  return [...new Set(datos)].filter(Boolean).sort()
+})
+
+watch(
+  () => filtros.value.tipo,
+  () => {
+    filtros.value.valor = ''
+  },
+)
 
 const costosFiltrados = computed(() => {
   return costos.value.filter((item) => {
@@ -87,7 +103,10 @@ const costosFiltrados = computed(() => {
     return (
       (!desde || fechaItem >= desde) &&
       (!hasta || fechaItem <= hasta) &&
-      (!filtros.value.placa || item.placa === filtros.value.placa) &&
+      (!filtros.value.valor ||
+        (filtros.value.tipo === 'placa'
+          ? item.placa === filtros.value.valor
+          : item.zona === filtros.value.valor)) &&
       (!filtros.value.ruta || item.ruta.toLowerCase().includes(filtros.value.ruta.toLowerCase()))
     )
   })
@@ -211,7 +230,8 @@ function limpiarFiltros() {
   filtros.value = {
     desde: '',
     hasta: '',
-    placa: '',
+    tipo: 'placa',
+    valor: '',
     ruta: '',
   }
 }
@@ -229,9 +249,12 @@ const mayorPerdida = computed(() => {
    HEADERS
 ========================= */
 
-const headers = [
+const headers = computed(() => [
   { title: 'Fecha', key: 'fecha' },
-  { title: 'Placa', key: 'placa' },
+  {
+    title: filtros.value.tipo === 'placa' ? 'Placa' : 'Zona',
+    key: filtros.value.tipo === 'placa' ? 'placa' : 'zona',
+  },
   { title: 'Ruta', key: 'ruta' },
   { title: 'Tarifa', key: 'tarifa' },
   { title: 'Combustible', key: 'combustible' },
@@ -241,11 +264,12 @@ const headers = [
   { title: 'Taxis', key: 'taxis' },
   { title: 'Total', key: 'total' },
   { title: 'Estado', key: 'estado' },
-]
+])
 
 const headersPerdidas = [
   { title: 'Fecha', key: 'fecha' },
   { title: 'Placa', key: 'placa' },
+  { title: 'Zona', key: 'zona' },
   { title: 'Ruta', key: 'ruta' },
   { title: 'Tarifa', key: 'tarifa' },
   { title: 'Costo', key: 'costo' },
@@ -290,13 +314,28 @@ const headersPerdidas = [
           />
         </v-col>
 
+        <v-select
+          v-model="filtros.tipo"
+          :items="[
+            { text: 'Placa', value: 'placa' },
+            { text: 'Zona', value: 'zona' },
+          ]"
+          item-title="text"
+          item-value="value"
+          label="Filtrar por"
+          variant="outlined"
+          density="compact"
+        />
+
         <v-col cols="12" sm="6" md="4" lg="3">
-          <v-select
-            v-model="filtros.placa"
-            :items="placas"
-            label="Placa"
+          <v-autocomplete
+            :key="filtros.tipo"
+            v-model="filtros.valor"
+            :items="opcionesFiltro"
+            :label="filtros.tipo === 'placa' ? 'Placa' : 'Zona'"
             variant="outlined"
             density="compact"
+            clearable
           />
         </v-col>
 
@@ -428,9 +467,15 @@ const headersPerdidas = [
           density="comfortable"
           class="tabla-costos"
         >
-          <template #item.placa="{ item }">
-            <v-chip color="primary" variant="flat" size="small">
+          <template v-if="filtros.tipo === 'placa'" #item.placa="{ item }">
+            <v-chip color="primary">
               {{ item.placa }}
+            </v-chip>
+          </template>
+
+          <template v-else #item.zona="{ item }">
+            <v-chip color="indigo">
+              {{ item.zona }}
             </v-chip>
           </template>
 
